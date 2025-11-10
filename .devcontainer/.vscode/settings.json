@@ -1,0 +1,16 @@
+{
+    "C_Cpp.codeAnalysis.clangTidy.useBuildPath": true,
+    "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+    "editor.experimental.asyncTokenizationLogging": true,
+    "editor.experimental.asyncTokenizationVerification": true,
+    "editor.foldingImportsByDefault": true,
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./MoneroVMiner",
+        "-p",
+        "*test.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true
+}

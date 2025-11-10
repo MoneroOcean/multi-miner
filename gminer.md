@@ -1,3 +1,4 @@
+
 ### Usage example with gminer on Linux
 
 * Get Meta Miner:
@@ -6,11 +7,9 @@
 sudo apt-get update
 sudo apt-get install -y nodejs
 wget https://raw.githubusercontent.com/MoneroOcean/meta-miner/master/mm.js
-chmod +x mm.js
-```
-
+chmod +x mm.jschmod +x''
 * Get gminer (and gminer v.2.39 for c29v algo support):
-
+core_dir
 ```shell
 wget https://github.com/develsoftware/GMinerRelease/releases/download/2.42/gminer_2_42_linux64.tar.xz
 mkdir gminer

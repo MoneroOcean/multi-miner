@@ -1,0 +1,910 @@
+[33mcommit b127bb02018deb9449883025888678a43d9fe9bc[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;33mtag: v4.5[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Fri Aug 19 05:24:03 2022 +0000
+
+    Added ETC support
+
+[33mcommit 141a7b5c86fafe35e9145bcc7083371316794f18[m[33m ([m[1;33mtag: v4.4[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Wed Dec 1 04:31:02 2021 +0000
+
+    GR support
+
+[33mcommit 7e556404145e905609b760e60da8c58789f0c2e6[m
+Merge: 4f0665e 2262aad
+Author: MoneroOcean <33983510+MoneroOcean@users.noreply.github.com>
+Date:   Tue Oct 19 18:01:36 2021 -0700
+
+    Merge pull request #38 from Spudz76/master-adjustXmrigRegex
+    
+    Fix: xmrig first hashrate sometimes is `n/a` even though second one is valid (slow GPUs mostly)
+
+[33mcommit 4f0665e90e2be1a72015e3ab35b9bc4c069d989b[m
+Merge: 28707fb 72a3960
+Author: MoneroOcean <33983510+MoneroOcean@users.noreply.github.com>
+Date:   Tue Oct 19 16:27:03 2021 -0700
+
+    Merge pull request #42 from Spudz76/master-updateAlgos
+    
+    Sync algos with current mo-xmrig code
+
+[33mcommit 28707fb02a3eb7bab52b34156b9ab6189684e419[m
+Merge: ac2ed8f cd2df6f
+Author: MoneroOcean <33983510+MoneroOcean@users.noreply.github.com>
+Date:   Tue Oct 19 16:23:18 2021 -0700
+
+    Merge pull request #40 from Spudz76/master-addProcessTitle
+    
+    Add process.title handling and --proc_title option
+
+[33mcommit ac2ed8ffe79463b867aafa9c03634d683658ae57[m
+Merge: 573f28d 1737651
+Author: MoneroOcean <33983510+MoneroOcean@users.noreply.github.com>
+Date:   Tue Oct 19 16:21:12 2021 -0700
+
+    Merge pull request #39 from Spudz76/master-hangupExtraMinerSocket
+    
+    Hangup on extra miner connections
+
+[33mcommit 72a39600df02f2c3038d88cd2dbd26782838cc3e[m
+Author: Tony Butler <spudz76@gmail.com>
+Date:   Fri Oct 15 22:35:41 2021 -0600
+
+    Sync algos with current mo-xmrig code
+
+[33mcommit cd2df6f8afb202b34b39a2974a003486faba251a[m
+Author: Tony Butler <spudz76@gmail.com>
+Date:   Fri Oct 15 20:17:32 2021 -0600
+
+    Add process.title handling and --proc_title option
+
+[33mcommit 173765195f0d2f35add7fa4a10cbf2cb1dfa3059[m
+Author: Tony Butler <spudz76@gmail.com>
+Date:   Fri Oct 15 20:13:45 2021 -0600
+
+    Hangup on extra miner connections
+
+[33mcommit 2262aade0c39c4bf2cd3e49425ffd866f433657b[m
+Author: Tony Butler <spudz76@gmail.com>
+Date:   Fri Oct 15 20:04:08 2021 -0600
+
+    Fix: xmrig first hashrate sometimes is `n/a` even though second one is valid (slow GPUs mostly)
+
+[33mcommit 573f28dccfd40407a02090047f9432f07781e577[m
+Merge: 9ffb871 fffe9da
+Author: MoneroOcean <33983510+MoneroOcean@users.noreply.github.com>
+Date:   Tue Oct 19 15:11:34 2021 -0700
+
+    Merge pull request #41 from Spudz76/master-fixKawpowBlob
+    
+    Change kawpow test blob to epoch 200, xmrig doesn't like epoch zero
+
+[33mcommit fffe9da195b79e7f2438e00a5154ac8fe17b197d[m
+Author: Tony Butler <spudz76@gmail.com>
+Date:   Fri Oct 15 20:50:14 2021 -0600
+
+    Change kawpow test blob to epoch 200, xmrig doesn't like epoch zero
+
+[33mcommit 9ffb871df7ce84fef2a1355208ea955c6610cca7[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Jul 26 16:12:29 2021 +0000
+
+    Fixed issues with eth nbminer
+
+[33mcommit d38af6849d097ec78c5ff57d5b306ec8617a13ae[m[33m ([m[1;33mtag: v4.3[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Jul 25 22:32:35 2021 +0000
+
+    Updated version
+
+[33mcommit 654e6297717946e4f399ca830b38d7a8b421aee7[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Jul 25 11:07:39 2021 -0700
+
+    Fixed ERG mining after switch from ETH/RVN
+
+[33mcommit 50d91c99d3446f458bac3e4f882e40118c81b377[m[33m ([m[1;33mtag: v4.2[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Jul 25 00:24:36 2021 +0000
+
+    Fixed version
+
+[33mcommit 3bc8939e0ed676b74968356edfdc780c6861b585[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sat Jul 24 17:22:36 2021 -0700
+
+    ERG support
+
+[33mcommit 79f7d03ea91be3a85e4f6c5a6cf657c6cd253dba[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Fri Jan 29 02:53:55 2021 +0000
+
+    Added gminer XMV mining support
+
+[33mcommit b6a144e31f3914651b375d5b6ed129e1db705a35[m[33m ([m[1;33mtag: v4.1[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Tue Jan 26 04:22:45 2021 +0000
+
+    Added keepalive support when miner watchdog is activated
+
+[33mcommit 536eede8482111bc10b3fad46051d9813ea5d1c9[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Tue Jan 26 04:16:51 2021 +0000
+
+    Updated keepalived params to be object
+
+[33mcommit a86fa6a116c76edd664c084299f59eb0a516cf8a[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Tue Jan 26 04:07:10 2021 +0000
+
+    fixed typo
+
+[33mcommit dbecdacdaf5bf9e98c12f0845d120a1b83534a94[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Tue Jan 26 04:03:37 2021 +0000
+
+    Added support for mm keepalive messages
+
+[33mcommit 28951a2d1d06fd4421936520d9c8ac9faf875190[m[33m ([m[1;33mtag: v4.0[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Jan 24 15:01:31 2021 -0800
+
+    Various fixes and gminer doc
+
+[33mcommit 65af40e740c55621724f8c4528f6a45664d648db[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Jan 24 12:53:15 2021 -0800
+
+    Added kawpow and ethash support
+
+[33mcommit 4e0a58bdf3ac6fb816e8c54a9df1730d870bb99b[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Wed Jul 29 20:09:03 2020 -0700
+
+    c29b algo support
+
+[33mcommit f62dc67ee934477929b6fc4d83958b47901ee529[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Wed Jul 29 18:08:54 2020 -0700
+
+    Updated hash factor for c29b algo
+
+[33mcommit 3bc1cee74d14d6a02dae9b1a3cf9babca91c0d74[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Tue Jun 16 09:25:36 2020 -0700
+
+    Fixed hashrate parsing for swap miner
+
+[33mcommit 8a9f5297511808976fa3a64fd1b09c0ac737469f[m[33m ([m[1;33mtag: v3.1[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sat Jun 13 12:21:31 2020 -0700
+
+    Updated version
+
+[33mcommit db216920f294c1ae23e15fd46c07327576a0126d[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sat Jun 13 12:19:41 2020 -0700
+
+    Fixed xmrig v6+ bench parsing
+
+[33mcommit a33e6f2431c6f73d65235fa78d08b21c6ebc615a[m[33m ([m[1;33mtag: v3.0[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Dec 26 19:00:18 2019 -0800
+
+    Updated for c29 algo
+
+[33mcommit 386eb6523b9eba04649b02b516ec7901b2ed7400[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Dec 26 18:19:25 2019 -0800
+
+    Updated stuff
+
+[33mcommit 4cc9a2ed6851ea5f23f49c2e8a51fb46c3c9fd18[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Dec 26 16:12:22 2019 -0800
+
+    Updated spaces
+
+[33mcommit 918c9e8a14280cdfc550416a2c8731453cfd7ea2[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Dec 26 16:11:32 2019 -0800
+
+    Updated spaces
+
+[33mcommit f7b1ddad82072905fd299675d6fed1998402b40f[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Dec 26 16:09:20 2019 -0800
+
+    Updated readme
+
+[33mcommit c9e1813e24c9958d91cf5fe72dcbef592b1e0832[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Dec 26 14:56:37 2019 -0800
+
+    Bug fix
+
+[33mcommit 18dd0695723c5611fc03209db63c243eee7a4673[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Dec 26 14:54:41 2019 -0800
+
+    Bug fix
+
+[33mcommit 8785a008f03b3beb5089ecd03725ba6b0904d8d4[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Dec 26 14:47:51 2019 -0800
+
+    Added c29 support
+
+[33mcommit a98ffae632f1e00885514380eef69bf96ae8e605[m[33m ([m[1;33mtag: v2.2[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Fri Sep 6 15:21:49 2019 -0700
+
+    Fixed endless miner restarts in case of idle watchdog is activated once
+
+[33mcommit 4a5e66b39ff7dcb8920bfca2af9d6725a1ae7471[m
+Author: MoneroOcean <33983510+MoneroOcean@users.noreply.github.com>
+Date:   Mon Jul 22 15:53:04 2019 -0700
+
+    Update README.md
+
+[33mcommit b873d8aee812ee3f18271837bc59639af2b6a184[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Jul 22 15:50:38 2019 -0700
+
+    Updated xmrig version
+
+[33mcommit bb0899cd2d7409352aa17f80cba71b0007f9ce10[m[33m ([m[1;33mtag: v2.1[m[33m)[m
+Merge: bf6b7c0 bc17d44
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Jul 22 15:45:37 2019 -0700
+
+    Added rx/loki support and redesigned algo bench support
+
+[33mcommit bf6b7c0d908ba6d2a2c62e8325fd4e17040e96cf[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Jul 22 15:42:30 2019 -0700
+
+    Added rx/loki support and redesigned algo bench support
+
+[33mcommit 52006e0f36cccdb5d09a1c766a11b22abcc1ab79[m[33m ([m[1;33mtag: v2.0[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Jun 17 14:39:41 2019 -0700
+
+    Added RandomWOW support
+
+[33mcommit bc17d4452086831ad0f7b37a6cc4f01ed19fe412[m
+Merge: 40f38b2 4a4a8dd
+Author: MoneroOcean <33983510+MoneroOcean@users.noreply.github.com>
+Date:   Sun Apr 7 14:08:00 2019 -0700
+
+    Merge pull request #22 from Kerney666/trm
+    
+    Added support for TeamRedMiner.
+
+[33mcommit 40f38b26920725c46a26105a57e21ede963042c1[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Wed Mar 20 12:17:22 2019 -0700
+
+    Changed default algo to cn/r
+
+[33mcommit 4a4a8dd002c51b9ec754c33acd1156bfca8d35bd[m
+Author: kerney666 <>
+Date:   Fri Mar 15 17:38:09 2019 +0100
+
+    Added support for TeamRedMiner.
+
+[33mcommit 55a071739d4e5faedec86bee66a9a8c66224d7f0[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Mar 7 10:51:03 2019 -0800
+
+    Updated xmrig version
+
+[33mcommit 883bd3395285e3ac0b4a47f38989f03a2628fa39[m[33m ([m[1;33mtag: v1.9[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Wed Mar 6 17:05:29 2019 -0800
+
+    Updated with new cn/rwz, cn/zls and cn/double algos
+
+[33mcommit d225327cf5671085b36483322c16d0e837e19593[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Mar 4 08:52:41 2019 -0800
+
+    Adjusted xmr stak algo to cn/r
+
+[33mcommit 412ff855b35d6327c498cca9a8b5a686e3b83d5b[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Mar 3 15:47:32 2019 -0800
+
+    Updated xmr-stak version
+
+[33mcommit a80311ff8c5767aaf18b27ada9d32206f63fd2db[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Tue Feb 26 18:44:39 2019 -0800
+
+    Removed comma
+
+[33mcommit 27844b6385e93efe4c5c78fd7a73beacf844f40b[m[33m ([m[1;33mtag: v1.8[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Feb 21 20:03:46 2019 -0800
+
+    Moved version
+
+[33mcommit b90bcbd46ac3dab92fd51ebf2777691851b1dac2[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Feb 21 20:03:24 2019 -0800
+
+    Changed cn/4 to cn/r
+
+[33mcommit a2927e7562b362b2be4affbf52bdf532c5328a0a[m[33m ([m[1;33mtag: v1.7[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Feb 21 15:07:29 2019 -0800
+
+    cn/4 support
+
+[33mcommit e23e14e763451936dc0b198d94a08f328b0a8e51[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Feb 14 12:25:41 2019 -0800
+
+    Removed --miner_stdin option from config
+
+[33mcommit 03c6ee526ae456d846c04ee53474d4c1792c96f6[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Feb 14 12:20:58 2019 -0800
+
+    Added miner_stdin option
+
+[33mcommit 66dfe6adce3bfc225c5cc0adcf99b823394d7eda[m
+Merge: 2182bce e0d1204
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Feb 14 11:56:50 2019 -0800
+
+    Merge branch 'master' of ssh://github.com/MoneroOcean/meta-miner
+
+[33mcommit e0d12046530d8bedf094d51a2319dd88d95cc733[m
+Merge: 55ea2cc cb49e92
+Author: MoneroOcean <33983510+MoneroOcean@users.noreply.github.com>
+Date:   Thu Feb 14 20:56:44 2019 +0100
+
+    Merge pull request #19 from Bathmat/master
+    
+    Allow inputs from miner
+
+[33mcommit 2182bcea402a02dd7ea1b0bd57f6cc0fe0bd4a70[m[33m ([m[1;33mtag: v1.6[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Feb 14 11:53:29 2019 -0800
+
+    Adjusted BKMs
+
+[33mcommit 55ea2ccacbf9045e639db4d2d09e9964df89f4b7[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Feb 14 11:04:35 2019 -0800
+
+    Added cn/wow and cn/gpu support
+
+[33mcommit 9054ed94c878e1c72ef0ed79f3445d9e1c730539[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Feb 14 11:00:57 2019 -0800
+
+    Added cn/wow and cn/gpu support
+
+[33mcommit cb49e926f9a4ec78840e3518e81c051650f0e345[m
+Author: Bathmat <32529800+Bathmat@users.noreply.github.com>
+Date:   Thu Feb 7 09:03:01 2019 -0600
+
+    Allow inputs from miner
+    
+    This allows inputs from the keyboard to work with the miner (such as 'h', 'c', 'r', etc.) without interfering with current logging setup.
+
+[33mcommit ffe329f1077746e5e3a48bf96560babb09c20c13[m
+Merge: 4620ae7 454d735
+Author: Bathmat <32529800+Bathmat@users.noreply.github.com>
+Date:   Thu Feb 7 08:59:23 2019 -0600
+
+    Merge pull request #4 from MoneroOcean/master
+    
+    Merge upstream changes
+
+[33mcommit 454d735a47909db4de95dc141526fbff7e246ad8[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Jan 31 09:52:31 2019 -0800
+
+    Fixed xmrig download links
+
+[33mcommit 75c3014bafd428f6d15cf0435157fa7db7cb7712[m[33m ([m[1;33mtag: v1.5[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Jan 31 09:39:38 2019 -0800
+
+    Added cn/half and cn-pico algo support
+
+[33mcommit cb13f26477963fbb8935fcb158116867ccbab137[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Jan 31 09:19:41 2019 -0800
+
+    Added cn/half and cn-pico algo support
+
+[33mcommit 4620ae7f41819152e5d1451ea07cae611c1b01a9[m
+Merge: 3ac64f7 638fd86
+Author: Bathmat <32529800+Bathmat@users.noreply.github.com>
+Date:   Sun Nov 11 08:40:22 2018 -0600
+
+    Merge pull request #3 from MoneroOcean/master
+    
+    Sync changes
+
+[33mcommit 638fd86b16f03afd7b3c02172c2d995436a80ce0[m
+Merge: 8bb0435 ab511e3
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Nov 11 09:24:50 2018 +0100
+
+    Merge branch 'master' of https://github.com/MoneroOcean/meta-miner
+
+[33mcommit 8bb04358fc0dcac9be6045bcf785272d6c45024d[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Nov 11 09:24:16 2018 +0100
+
+    Fixed crash for pools that do not support algo
+
+[33mcommit 3ac64f7d814ca04c2c35228a90213d17b3b85d3a[m
+Merge: 77f88a3 ab511e3
+Author: Bathmat <32529800+Bathmat@users.noreply.github.com>
+Date:   Sat Nov 10 14:06:49 2018 -0600
+
+    Merge pull request #2 from MoneroOcean/master
+    
+    Sync changes
+
+[33mcommit ab511e33a3d22005025d130beb20926fd71bd654[m
+Merge: 70c3f23 8474d92
+Author: MoneroOcean <33983510+MoneroOcean@users.noreply.github.com>
+Date:   Tue Oct 30 06:38:34 2018 +0100
+
+    Merge pull request #14 from MarosMacko/master
+    
+    Typo fixes
+
+[33mcommit 70c3f23f7b754715139baf8dac03355c6fd7ab40[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Oct 29 17:55:50 2018 +0100
+
+    Added CryptoDredge nVidia miner support
+
+[33mcommit 8474d92f432f4a6f18febcff9c8f7d077c9148af[m
+Author: MarosM <mackomarosh@gmail.com>
+Date:   Fri Oct 26 15:05:04 2018 +0200
+
+    Typo fixes
+
+[33mcommit 5e03d82d007bb4e3ff0fdb1db03b3061c197eef4[m[33m ([m[1;33mtag: v1.3[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Oct 25 22:00:52 2018 +0200
+
+    Fix for quickly changed algo case
+
+[33mcommit 508f5eb35ea4163703f49aab4c2fc34c68d85c23[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Oct 25 14:32:44 2018 +0200
+
+    Fixed miner algos
+
+[33mcommit d07d349234f9f463a35ddb8f1154b06af3447dd1[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Oct 22 10:04:30 2018 +0200
+
+    Added TRTL donate address
+
+[33mcommit 6b4530bc92a0302532bae168cf4dd4262da3a0f8[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sat Oct 13 14:47:21 2018 +0200
+
+    Updated donate address
+
+[33mcommit 4ef6cd97005f7469181c07b104929d261bfba5d8[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sat Oct 13 14:44:04 2018 +0200
+
+    Updated xmrig version
+
+[33mcommit cbdded8585b6e72f47c5aa437bfe0a71f19c810e[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Oct 8 15:42:39 2018 +0200
+
+    Updated xmrig version
+
+[33mcommit 77f88a32a9463eda222d79c25803fba1727924ec[m
+Merge: a747b31 ef718c7
+Author: Bathmat <32529800+Bathmat@users.noreply.github.com>
+Date:   Fri Oct 5 11:01:27 2018 -0500
+
+    Merge pull request #1 from MoneroOcean/master
+    
+    Merge changes
+
+[33mcommit ef718c762c3ffdb0ef361af63f602f54edeee025[m
+Merge: d08410d 12cd23f
+Author: MoneroOcean <33983510+MoneroOcean@users.noreply.github.com>
+Date:   Fri Oct 5 17:54:30 2018 +0200
+
+    Merge pull request #9 from Bathmat/patch-1
+    
+    Fix Readme typo
+
+[33mcommit d08410ddf06c95b268e3751a5b546c2ef03209c0[m[33m ([m[1;33mtag: v1.2[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Fri Oct 5 17:47:23 2018 +0200
+
+    Updated version
+
+[33mcommit b522be8cd6898e08348acc80b0b2c750568acf72[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Fri Oct 5 17:37:08 2018 +0200
+
+    Removed login to ignore pool jobs during miner restarts to avoid miner login issues
+
+[33mcommit 12cd23f97292d21fc714f52a0d15f45f5b473528[m
+Author: Bathmat <32529800+Bathmat@users.noreply.github.com>
+Date:   Fri Oct 5 09:12:23 2018 -0500
+
+    Fix Readme typo
+
+[33mcommit dfeebf5449a9bc69fc92d223526c089095258743[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Fri Oct 5 15:29:17 2018 +0200
+
+    Removed support of long algo names
+
+[33mcommit f195376b3d2c31bb35596523b0821c9938e07962[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Fri Oct 5 13:29:37 2018 +0200
+
+    Fixed algo-perf list
+
+[33mcommit a0a04934262949c7348edf3991d93b1ec3199548[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Fri Oct 5 12:34:09 2018 +0200
+
+    Updated sample config file
+
+[33mcommit 1bc9b3918c55799cccd75fb08b4c6fe758be51d2[m[33m ([m[1;33mtag: v1.1[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Fri Oct 5 12:17:08 2018 +0200
+
+    Fixed op priority
+
+[33mcommit 6c3c5c8406229e38f055d085a2066f5eef9601d3[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Fri Oct 5 12:15:52 2018 +0200
+
+    Fixed custom config file load
+
+[33mcommit dfe0d2b610c1b9d701dbb340397c08e45d57a3e3[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Fri Oct 5 11:52:07 2018 +0200
+
+    Fixed algo names
+
+[33mcommit 07ede78b050781d54740f5f99719b77bde3af9cc[m
+Merge: a747b31 14ff77f
+Author: MoneroOcean <33983510+MoneroOcean@users.noreply.github.com>
+Date:   Fri Oct 5 11:41:31 2018 +0200
+
+    Merge pull request #8 from Bathmat/add-cn2
+    
+    Add support for cn/2, CNv8, Monero8
+
+[33mcommit 14ff77fdb658d2899fa8eba12b7b20e9cc927ea4[m
+Author: Bathmat <jkburch06@gmail.com>
+Date:   Thu Oct 4 22:05:17 2018 -0500
+
+    Fix typo
+
+[33mcommit d2c7ed543acb887b01fc98b8cccf1b7c38b56251[m
+Author: Bathmat <jkburch06@gmail.com>
+Date:   Thu Oct 4 21:53:17 2018 -0500
+
+    Add support for cn/2, CNv8, Monero8
+
+[33mcommit a747b310f378148d05ea489c327e0442873963d3[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Fri Oct 5 00:26:59 2018 +0200
+
+    More reliable miner restart
+
+[33mcommit a92a6d4c2db9d49d3a7dcfdd47ef6e0877d669b8[m[33m ([m[1;33mtag: v1.0[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Oct 4 14:39:26 2018 +0200
+
+    Fixed setting first pool job in case of miner delayed start
+
+[33mcommit 6c6806879184abcd45e00ebdf271b0569dc42570[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Sep 3 14:57:37 2018 +0200
+
+    Added info about 0 fees
+
+[33mcommit 28a7f5ddd85318ba0d06d61f2eb76a9b4a9dd7ef[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Sep 3 14:56:33 2018 +0200
+
+    Added info about 0 fees
+
+[33mcommit bdd777f6430d1c87cbf0521c1c9d9c38fa75d64d[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Wed Aug 22 15:52:24 2018 +0200
+
+    Fixed message in verbose mode
+
+[33mcommit 4fd104f56238011a7ef89bb563e89ae27578a727[m[33m ([m[1;33mtag: v0.9[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Wed Aug 22 11:32:06 2018 +0200
+
+    Added algo_min_time functionality support
+
+[33mcommit 4ee061c790e079858b52108a208fbeb1153d1ac3[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Wed Aug 22 11:31:59 2018 +0200
+
+    Added algo_min_time functionality support
+
+[33mcommit 912b3afd4ad255e8962be7ba6581195ad1a432d5[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Aug 20 22:12:12 2018 +0200
+
+    Fixed https://github.com/MoneroOcean/meta-miner/issues/3
+
+[33mcommit 590c13db8ef26486a9d69d5b83684f7ea3bd7b1a[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Aug 20 21:38:51 2018 +0200
+
+    Typo fix
+
+[33mcommit 9ef9d9c313d0e3bcec2051db47df78b01d33c2c2[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Aug 20 21:36:39 2018 +0200
+
+    Typo fix
+
+[33mcommit f59ac8f10726a4b88724bfcff0d9ef7cda7d4fbd[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Aug 20 21:30:27 2018 +0200
+
+    Fixed TypeError Incorrect value of args option
+
+[33mcommit 859000fa6dab4d435eb3c8f789ea49a1876d5f75[m[33m ([m[1;33mtag: v0.8[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Aug 20 09:14:06 2018 +0200
+
+    Updated version
+
+[33mcommit 0f1af6582d0bf071b896f76a6c1f12c197707a3f[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Aug 20 09:07:16 2018 +0200
+
+    Changed kill to tree_kill
+
+[33mcommit ff638e644d0e4c925cdb18c41a18798f717c4787[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Aug 20 08:56:09 2018 +0200
+
+    Added claymore hashrate detection
+
+[33mcommit 2d5be714d3b9792cfa588fed62776dcb98f7e4a6[m[33m ([m[1;33mtag: v0.7[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Fri Aug 17 12:48:02 2018 +0200
+
+    Added v0.7 tag
+
+[33mcommit 3d6a4da5b0558fd38940addeef0a833d94ec7790[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Fri Aug 17 12:43:14 2018 +0200
+
+    Add executable bit
+
+[33mcommit f5da3331485305712c5bf49c0392836f39aaa1f6[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Thu Aug 16 10:38:09 2018 +0200
+
+    Fixed error reporting during config save
+
+[33mcommit cc29d32312d94edfa49a311686f16dd69bb79dc7[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Wed Aug 15 09:04:05 2018 +0200
+
+    Added extra step for xmr-stak 2.4.5
+
+[33mcommit 8eedcc956ebb7938b41c50407e0d0be891d2a988[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Wed Aug 15 09:03:19 2018 +0200
+
+    Fixed watchdog_hashrate for perf algo class change without miner restart situation
+
+[33mcommit 2f3a8be1d574d316b5c4d7c6cd48eda7bc09c2a6[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Tue Aug 14 10:33:21 2018 +0200
+
+    Some more explanations
+
+[33mcommit 7e8ff1a0adaa770fe23d91ebce11db840506fc9a[m[33m ([m[1;33mtag: v0.6[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Aug 13 22:19:26 2018 +0200
+
+    Added hashrate_watchdog and miner restart in case of its crash
+
+[33mcommit b6522c81e474527f4cb420ed42cca8b7cec99fe5[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Aug 13 16:00:03 2018 +0200
+
+    Avoid miner keepalive errors during benchmark phase
+
+[33mcommit 958de0e406bb34a99482bf4c5e0c720ea43a66a6[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Mon Aug 13 15:14:30 2018 +0200
+
+    Fixed https://github.com/MoneroOcean/meta-miner/issues/1
+
+[33mcommit f9f097f69700b3375883a440112057e6b1addf0f[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 21:00:35 2018 +0200
+
+    Added sample mm.json
+
+[33mcommit a924df4d5d0dfceec12ee8831758c8661bef0c0a[m[33m ([m[1;33mtag: v0.5[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 19:30:08 2018 +0200
+
+    Fixed mm.exe mm.json location and v0.5 version
+
+[33mcommit 4a77b66cfcc9d30309fed2206f32974c1dcf61d6[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 16:46:06 2018 +0200
+
+    Wording fix
+
+[33mcommit 6f02e0d209f038b9f66dc05fe2635649e3178fa8[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 16:14:27 2018 +0200
+
+    Handle pool connection drop correctly
+
+[33mcommit 522bc390899c28f4c799a899e73c2c7e68b0bceb[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 15:56:48 2018 +0200
+
+    Fixed xmr stak hashrate detection in corner cases and its masari benchmark
+
+[33mcommit 350e8dcfc54ac1aeb035cac7111c82bc95fcc2d7[m[33m ([m[1;33mtag: v0.4[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 14:33:09 2018 +0200
+
+    Fixed hashrate detection for xmr stak
+
+[33mcommit 41413423f9622ac8690ca1fa8d87a559749278e0[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 13:58:21 2018 +0200
+
+    Replaced array includes by more compatible code
+
+[33mcommit 6ca88387c9455b1c905f0b04a3caa30f8281050f[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 13:43:04 2018 +0200
+
+    Added clarification about SSL/TLS pool port support
+
+[33mcommit dd1f2a7df5131da84b2d480b1d4705dc1ef73fcf[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 13:31:14 2018 +0200
+
+    Added SSL/TLS pool support and miner watchdog
+
+[33mcommit c0aea3c7980c69cd4b0ec86be207be590dc75691[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 10:25:33 2018 +0200
+
+    Fixed wording
+
+[33mcommit 0b349d5874a562092488a1c6790b6f5adfaf04b6[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 10:19:59 2018 +0200
+
+    Fixed wording
+
+[33mcommit edf37502be78ad747312c5e67a015b8adb0413b4[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 09:51:37 2018 +0200
+
+    Rearranged config sections
+
+[33mcommit 6dbad3f5191bd2a38499b5305c59d399aecdaa7e[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 09:30:31 2018 +0200
+
+    Added link to list of all algorithms
+
+[33mcommit 748d31608bcc33d4a9b45ea6be6eedfd8b98c0b1[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 09:09:55 2018 +0200
+
+    Updated --help output
+
+[33mcommit e9ef31b76554268a15fa1fb3db2e8a1f9adb4a5a[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 09:08:32 2018 +0200
+
+    Fixed wording
+
+[33mcommit 44a54f433dfa817f1ca87731fb2d350e966335e1[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 09:06:25 2018 +0200
+
+    Added mm.exe suppport
+
+[33mcommit a542a4ff8d7095dd36ab30361f8319a18561b985[m[33m ([m[1;33mtag: v0.3[m[33m)[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 08:54:24 2018 +0200
+
+    Windows build files
+
+[33mcommit b3221a151ea83ee25d97d2dd15761d3f3ecaa73f[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 08:37:35 2018 +0200
+
+    Adjusted message levels
+
+[33mcommit ec8fb74ac4a66ea53d9d63ce99e784f7d853adb5[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sun Aug 12 08:29:27 2018 +0200
+
+    Added verbose output mode and put most mm.js output under it
+
+[33mcommit 44197dbca1d669ee9b41812172a380d758faaa2b[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sat Aug 11 17:07:24 2018 +0200
+
+    Added clarification about setting CPU/GPU xmr-stak
+
+[33mcommit aa2b6efef960de174fa99b78d113244cd280f526[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sat Aug 11 17:06:21 2018 +0200
+
+    Allow algo miner override
+
+[33mcommit ffacad91097087392b7c0e9a13f840b1d09d90b1[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sat Aug 11 16:58:49 2018 +0200
+
+    Added usage example with xmr-stak (AMD only) on Windows and general configuration guidelines
+
+[33mcommit 338220177296c4cca2afe22b3c6f0ea4175466f6[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sat Aug 11 16:01:47 2018 +0200
+
+    Fixed backup pool handling and regrouped code for clarity
+
+[33mcommit 91ab40a845466fad56b70d14faf93baac37d223d[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sat Aug 11 13:35:51 2018 +0200
+
+    More strict wording
+
+[33mcommit cc3d8795e814f6db5719bb7432d4e4697afc4741[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sat Aug 11 13:35:28 2018 +0200
+
+    Fixed handling of wrong json
+
+[33mcommit d95da6ac2737813dff44fddef8294d809b42bd6e[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sat Aug 11 10:50:15 2018 +0200
+
+    Added Windows section
+
+[33mcommit abf700620376b2905b32a37fa0304e0ca546d57b[m
+Author: MoneroOcean <support@moneroocean.stream>
+Date:   Sat Aug 11 02:31:18 2018 +0200
+
+    Initial commit
+
+[33mcommit 83829a321744b96ba3de8e650d4fde4d74e2a497[m
+Author: MoneroOcean <33983510+MoneroOcean@users.noreply.github.com>
+Date:   Sat Aug 11 01:49:25 2018 +0200
+
+    Initial commit
