@@ -53,8 +53,10 @@ const hashrate_regexes = [
   [1,       1, /Mining at\s+([\d\.]+) gps/],                                 // tube4referenceMiner (use mode=rolling command line option)
   [1,       1, /mining at\s+([\d\.]+) gps/],                                 // SwapReferenceMiner (use mode=rolling command line option)
   [1,       2, /Total\s+:\s+([\d\.]+) gps/],                                 // MoneroVMiner
-  [1,       2, /([\d\.]+) G\/s/],                                            // gminer
-  [1000000, 2, /([\d\.]+) MH\/s/],                                           // gminer
+  [1,       2, /\|\s+\d+\s+\S*\s*([\d\.]+) G\/s.*\|\n\+/],                   // gminer
+  [1000000, 2, /\|\s+\d+\s+\S*\s*([\d\.]+) MH\/s.*\|\n\+/],                  // gminer
+  [1,       2, /\|\s+([\d\.]+) G\/s.*\|\n\+/],                               // gminer (2+ GPUs)
+  [1000000, 2, /\|\s+([\d\.]+) MH\/s.*\|\n\+/],                              // gminer (2+ GPUs)
   [1,       3, /Average speed \(15s\): ([\d\.]+) g\/s/],                     // lolminer
   [1000000, 3, /Average speed \(15s\): ([\d\.]+) Mh\/s/],                    // lolminer
 ];
