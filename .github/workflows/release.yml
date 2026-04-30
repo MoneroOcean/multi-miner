@@ -1,0 +1,34 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Build Windows executable
+        run: npx --yes pkg@5.8.1 -t node16-win-x64 --public mm.js
+
+      - name: Package release zip
+        run: zip -9 "mm-${GITHUB_REF_NAME}.zip" LICENSE mm.exe mm.js c29.md gminer.md README.md xmr-stak.md
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "${GITHUB_REF_NAME}" "mm-${GITHUB_REF_NAME}.zip"
+          --title "${GITHUB_REF_NAME}"
+          --notes "Meta Miner ${GITHUB_REF_NAME}"
