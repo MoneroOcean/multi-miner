@@ -48,6 +48,11 @@ const hashrate_regexes = [
   [1,       1, /Totals \(ALL\):\s+[\d\.]+\s+([1-9]\d*\.\d+|0\.[1-9]\d*)\s/], // xmr-stak
   [1,       1, /Total Speed: ([\d\.]+) H\/s,/],                              // claymore
   [1,       1, /\(Avr ([\d\.]+)H\/s\)/],                                     // CryptoDredge
+  [1,       3, /Total:\s*([\d\.]+)\s*H\/s\b/i],                                // SRBMiner
+  [1e3,     3, /Total:\s*([\d\.]+)\s*kH\/s\b/i],                               // SRBMiner
+  [1e6,     3, /Total:\s*([\d\.]+)\s*MH\/s\b/i],                               // SRBMiner
+  [1e9,     3, /Total:\s*([\d\.]+)\s*GH\/s\b/i],                               // SRBMiner
+  [1e12,    3, /Total:\s*([\d\.]+)\s*TH\/s\b/i],                               // SRBMiner
   [1e3,     3, /Total[^:]+:\s*([\d\.]+)\s*kh\/s/],                           // TeamRedMiner variant 1 (kh/s)
   [1,       3, /Total[^:]+:\s*([\d\.]+)\s*h\/s/],                            // TeamRedMiner variant 2 (h/s)
   [1,       1, /Mining at\s+([\d\.]+) gps/],                                 // tube4referenceMiner (use mode=rolling command line option)
