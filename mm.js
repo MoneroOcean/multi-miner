@@ -75,6 +75,24 @@ function algo_hashrate_factor(algo) {
   }
 }
 
+function for_each_hashrate(str, algo, cb, only_regex_idx) {
+  for (let i in hashrate_regexes) {
+    const selected_regex_idx = typeof only_regex_idx === "function" ? only_regex_idx() : only_regex_idx;
+    if (selected_regex_idx >= 0 && parseInt(i, 10) !== selected_regex_idx) continue;
+    const hashrate_regex = hashrate_regexes[i];
+    const regex = hashrate_regex[2];
+    const flags = regex.flags.indexOf("g") === -1 ? regex.flags + "g" : regex.flags;
+    const global_regex = new RegExp(regex.source, flags);
+    let m;
+    while (m = global_regex.exec(str)) {
+      const hashrate = parseFloat(m[1]) * hashrate_regex[0] * algo_hashrate_factor(algo);
+      if (cb(hashrate, hashrate_regex, parseInt(i, 10)) === false) return false;
+      if (global_regex.lastIndex === m.index) global_regex.lastIndex++;
+    }
+  }
+  return true;
+}
+
 // main algos we bench for
 const bench_algos = [
   "cn/r",
@@ -360,11 +378,9 @@ function print_all_messages(str) {
   if (c.log_file) fs.appendFileSync(c.log_file, str);
   if (c.hashrate_watchdog) {
     const str2 = str.replace(/\x1b\[[0-9;]*m/g, ""); // remove all colors
-    for (let i in hashrate_regexes) {
-      const hashrate_regex = hashrate_regexes[i];
-      const m = str2.match(hashrate_regex[2]);
-      if (m) last_miner_hashrate = parseFloat(m[1]) * hashrate_regex[0] * algo_hashrate_factor(curr_algo);
-    }
+    for_each_hashrate(str2, curr_algo, function(hashrate) {
+      last_miner_hashrate = hashrate;
+    });
   }
 }
 
@@ -921,30 +937,29 @@ function do_miner_perf_runs(cb) {
       };
       let nr_prints_needed = -1;
       let nr_prints_found = 0;
+      let hashrate_regex_idx = -1;
       miner_proc = start_miner(cmd, function(str) {
         print_messages(str);
         str = str.replace(/\x1b\[[0-9;]*m/g, ""); // remove all colors
-        for (let i in hashrate_regexes) {
-          const hashrate_regex = hashrate_regexes[i];
-          const m = str.match(hashrate_regex[2]);
-          if (m) {
-            if (nr_prints_needed < 0) nr_prints_needed = hashrate_regex[1];
-            const hashrate = parseFloat(m[1]) * hashrate_regex[0] * algo_hashrate_factor(algo);
-            if (++nr_prints_found >= nr_prints_needed) {
-              const algo_deps = bench_algo_deps(algo, hashrate);
-              for (let algo_dep in algo_deps) {
-                log("Setting performance for " + algo_dep + " algo to " + algo_deps[algo_dep]);
-                c.algo_perf[algo_dep] = algo_deps[algo_dep];
-              }
-              miner_proc.on('close', (code) => { clearTimeout(timeout); resolve(); });
-              tree_kill(miner_proc.pid);
-              break;
-            } else {
-              log("Read performance for " + algo + " algo to " + hashrate + ", waiting for " +
-                     (nr_prints_needed - nr_prints_found) + " more print(s).");
-            }
+        for_each_hashrate(str, algo, function(hashrate, hashrate_regex, regex_idx) {
+          if (nr_prints_needed < 0) {
+            nr_prints_needed = hashrate_regex[1];
+            hashrate_regex_idx = regex_idx;
           }
-        }
+          if (++nr_prints_found >= nr_prints_needed) {
+            const algo_deps = bench_algo_deps(algo, hashrate);
+            for (let algo_dep in algo_deps) {
+              log("Setting performance for " + algo_dep + " algo to " + algo_deps[algo_dep]);
+              c.algo_perf[algo_dep] = algo_deps[algo_dep];
+            }
+            miner_proc.on('close', (code) => { clearTimeout(timeout); resolve(); });
+            tree_kill(miner_proc.pid);
+            return false;
+          } else {
+            log("Read performance for " + algo + " algo to " + hashrate + ", waiting for " +
+                   (nr_prints_needed - nr_prints_found) + " more print(s).");
+          }
+        }, function() { return hashrate_regex_idx; });
       });
     });
   }
