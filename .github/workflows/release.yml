@@ -9,26 +9,106 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  validate:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 18
+          node-version: 22
 
-      - name: Build Windows executable
-        run: npx --yes pkg@5.8.1 -t node16-win-x64 --public mm.js
+      - name: Install locked dependencies
+        run: npm ci
 
-      - name: Package release zip
-        run: zip -9 "mm-${GITHUB_REF_NAME}.zip" LICENSE mm.exe mm.js c29.md gminer.md README.md xmr-stak.md
+      - name: Test
+        run: npm test
+
+      - name: Quality
+        run: npm run quality
+
+      - name: Audit
+        run: npm run audit
+
+  build:
+    needs: validate
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x64
+            artifact: lin
+            os: ubuntu-latest
+          - target: linux-arm64
+            artifact: lin-arm
+            os: ubuntu-latest
+          - target: win-x64
+            artifact: win
+            os: windows-latest
+          - target: macos-x64
+            artifact: mac-intel
+            os: macos-latest
+          - target: macos-arm64
+            artifact: mac
+            os: macos-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Build ${{ matrix.target }}
+        run: npm run build:target -- ${{ matrix.target }}
+
+      - name: Ad-hoc sign macOS binary
+        if: startsWith(matrix.target, 'macos-')
+        run: codesign --force --sign - "dist/${{ matrix.target }}/mm"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/${{ matrix.target }}/*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+
+      - name: Package release archives
+        run: |
+          mkdir -p release
+          for artifact in lin lin-arm mac-intel mac; do
+            mkdir -p "release/$artifact"
+            cp "artifacts/$artifact/mm" README.md LICENSE "release/$artifact/"
+            chmod +x "release/$artifact/mm"
+            tar -C "release/$artifact" -czf "mm-${GITHUB_REF_NAME}-${artifact}.tar.gz" .
+          done
+          mkdir -p release/win
+          cp artifacts/win/mm.exe README.md LICENSE release/win/
+          (cd release/win && zip -9 -r "../../mm-${GITHUB_REF_NAME}-win.zip" .)
 
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create "${GITHUB_REF_NAME}" "mm-${GITHUB_REF_NAME}.zip"
+          gh release create "${GITHUB_REF_NAME}"
+          mm-${GITHUB_REF_NAME}-lin.tar.gz
+          mm-${GITHUB_REF_NAME}-lin-arm.tar.gz
+          mm-${GITHUB_REF_NAME}-mac-intel.tar.gz
+          mm-${GITHUB_REF_NAME}-mac.tar.gz
+          mm-${GITHUB_REF_NAME}-win.zip
           --title "${GITHUB_REF_NAME}"
-          --notes "Meta Miner ${GITHUB_REF_NAME}"
+          --notes "Multi-Miner ${GITHUB_REF_NAME}"

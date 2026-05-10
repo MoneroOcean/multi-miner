@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      - run: npm test
+
+      - run: npm run quality
+
+      - run: npm run audit
+
+  package-smoke:
+    name: Packaged Binary Smoke
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      - name: Build current platform binary
+        run: npm run build:current
+
+      - name: Help smoke
+        run: ./dist/current/mm --help
+
+      - name: Diagnostics smoke
+        run: |
+          tmpdir="$(mktemp -d)"
+          cat > "$tmpdir/mm.json" <<'JSON'
+          {
+            "pools": ["127.0.0.1:3333"],
+            "algos": { "rx/0": "node fake-miner.js" },
+            "algo_perf": { "rx/0": 1 },
+            "user": "wallet",
+            "pass": "x"
+          }
+          JSON
+          ./dist/current/mm "$tmpdir/mm.json" --diagnostics

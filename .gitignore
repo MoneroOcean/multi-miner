@@ -1,2 +1,16 @@
 *.exe
 *.zip
+*.tar.gz
+*~
+*.swp
+*.swo
+.*.un~
+.DS_Store
+dist/
+node_modules/
+.cache/
+coverage/
+test-artifacts/
+.nyc_output/
+npm-debug.log*
+mm.json

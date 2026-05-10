@@ -1,0 +1,37 @@
+{
+  "name": "multi-miner",
+  "version": "5.0.0",
+  "private": true,
+  "description": "Multi-Miner: algo switching support for stratum miners",
+  "license": "GPL-3.0-or-later",
+  "bin": {
+    "mm": "./mm.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --require ./tests/common/test_output_buffer.js --test --test-reporter=./tests/common/spec-reporter.js tests/all.js",
+    "test:live": "node scripts/run-live-tests.js",
+    "test:live:cpu": "node tests/live-cpu-miners.js",
+    "test:live:intel-gpu": "node tests/live-intel-gpu-miners.js",
+    "test:live:nvidia-gpu": "node tests/live-nvidia-gpu-miners.js",
+    "quality": "node scripts/check-quality.js",
+    "audit": "npm audit --audit-level=moderate",
+    "build:current": "node scripts/build-current.js",
+    "build:target": "node scripts/build-target.js",
+    "build:release": "node scripts/build-release.js"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "6.10.1"
+  },
+  "pkg": {
+    "scripts": [
+      "src/**/*.js"
+    ],
+    "assets": [
+      "README.md",
+      "LICENSE"
+    ]
+  }
+}
