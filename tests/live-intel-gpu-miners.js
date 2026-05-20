@@ -86,7 +86,6 @@ async function runCase(binary, testCase) {
     if (isUnsupportedOutput(text)) return { name: testCase.name, status: "skipped", reason: "unsupported by this " + testCase.miner + " build or device" };
     return { name: testCase.name, status: "failed", reason: error.message, output: tail(text) };
   } finally {
-    cleanupMoMiner(testCase);
     await app.stop();
     await pool.close();
   }
@@ -108,7 +107,7 @@ function findSrbMiner() {
 }
 
 function findMoMiner() {
-  return findConfiguredMinerBinary("MOMINER_PATH", "mominer", "mominer.js");
+  return findConfiguredMinerBinary("MOMINER_PATH", "mominer", process.platform === "win32" ? "mominer.exe" : "mominer");
 }
 
 function hasIntelOpenClGpu() {
@@ -147,66 +146,18 @@ function moMinerCommand(binary, testCase, minerPort, tmpDir) {
   const configPath = path.join(tmpDir, "mominer-config.json");
   fs.writeFileSync(configPath, JSON.stringify(moMinerConfig(testCase, minerPort), null, 2));
   const rootDir = path.dirname(binary);
-  if (canUseMoMinerDocker(rootDir)) return moMinerDockerCommand(rootDir, tmpDir);
+  if (process.platform === "win32") return [quoteForCommand(binary), "mine", quoteForCommand(configPath)].join(" ");
   const libPath = [rootDir, path.join(rootDir, "lib"), path.join(rootDir, "lib64"), process.env.LD_LIBRARY_PATH || ""].filter(Boolean).join(":");
   const inner = [
     "cd " + shellQuote(rootDir),
     "&&",
     "MOMINER_CONFIG_DIR=" + shellQuote(tmpDir),
     "LD_LIBRARY_PATH=" + shellQuote(libPath),
-    shellQuote(process.execPath),
     shellQuote(binary),
     "mine",
     shellQuote(configPath),
   ].join(" ");
   return "/bin/sh -lc " + quoteForCommand(inner);
-}
-
-function moMinerDockerCommand(rootDir, tmpDir) {
-  const image = process.env.MM_LIVE_MOMINER_DOCKER_IMAGE || "mominer-deploy";
-  testDockerImage(rootDir, image);
-  const containerName = "mm-mominer-" + process.pid + "-" + Date.now();
-  const configArg = "/root/mominer-live/mominer-config.json";
-  moMinerDockerCommand.containerName = containerName;
-  return [
-    shellQuote("docker"),
-    "run",
-    "--privileged",
-    "--rm",
-    "--network", "host",
-    "--name", shellQuote(containerName),
-    "--mount", shellQuote("type=bind,source=" + rootDir + ",target=/root/mominer"),
-    "--mount", shellQuote("type=bind,source=" + tmpDir + ",target=/root/mominer-live"),
-    "--workdir", "/root/mominer",
-    shellQuote(image),
-    "node",
-    "mominer.js",
-    "mine",
-    shellQuote(configArg),
-  ].join(" ");
-}
-
-function canUseMoMinerDocker(rootDir) {
-  return commandOk("docker", ["--version"]) && fs.existsSync(path.join(rootDir, "deploy.dockerfile"));
-}
-
-function testDockerImage(rootDir, image) {
-  if (commandOk("docker", ["image", "inspect", image])) return;
-  childProcess.spawnSync("docker", ["build", "-q", "-t", image, "-f", "deploy.dockerfile", "."], {
-    cwd: rootDir,
-    encoding: "utf8",
-  });
-}
-
-function cleanupMoMiner(testCase) {
-  if (testCase.miner !== "mominer" || !moMinerDockerCommand.containerName) return;
-  childProcess.spawnSync("docker", ["rm", "-f", moMinerDockerCommand.containerName], { encoding: "utf8" });
-  moMinerDockerCommand.containerName = "";
-}
-
-function commandOk(command, args) {
-  const result = childProcess.spawnSync(command, args, { encoding: "utf8" });
-  return result.status === 0;
 }
 
 function moMinerConfig(testCase, minerPort) {

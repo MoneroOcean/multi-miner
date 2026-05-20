@@ -38,11 +38,12 @@ const RELEASES = {
   mominer: {
     api: "https://api.github.com/repos/MoneroOcean/mominer/releases/latest",
     prefix: "https://github.com/MoneroOcean/mominer/releases/download/",
-    binary: "mominer.js",
-    suffix: /(\.tar\.(gz|xz|bz2)|\.tgz|\.txz|\.tbz2)$/i,
-    asset: (assets) => LINUX_X64
-      ? pickAsset(assets, [(asset) => /mominer/i.test(asset.name) && /\.(tar\.gz|tgz|tar\.xz|txz)$/i.test(asset.name), (asset) => /\.(tar\.gz|tgz|tar\.xz|txz)$/i.test(asset.name)])
-      : null,
+    binary: process.platform === "win32" ? "mominer.exe" : "mominer",
+    suffix: /(\.tar\.(gz|xz|bz2)|\.tgz|\.txz|\.tbz2|\.zip)$/i,
+    asset: (assets) => pickAsset(assets, [
+      (asset) => LINUX_X64 && /^mominer-v.*-lin\.tgz$/i.test(asset.name),
+      (asset) => WIN_X64 && /^mominer-v.*-win\.zip$/i.test(asset.name),
+    ]),
   },
   lolminer: {
     api: "https://api.github.com/repos/Lolliedieb/lolMiner-releases/releases/latest",

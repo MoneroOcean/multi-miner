@@ -292,7 +292,7 @@ cache when needed. Override with `MM_LIVE_CACHE_DIR` or a miner-specific path:
 ```sh
 npm run test:live:intel-gpu
 SRBMINER_PATH=/path/to/SRBMiner-MULTI npm run test:live:intel-gpu
-MOMINER_PATH=/path/to/mominer.js MM_LIVE_MOMINER_C29_DEVICE=gpu1*1 npm run test:live:intel-gpu
+MOMINER_PATH=/path/to/mominer MM_LIVE_MOMINER_C29_DEVICE=gpu1*1 npm run test:live:intel-gpu
 MM_LIVE_INTEL_GPU_CASES=srbminer-cn-gpu,mominer-c29 npm run test:live:intel-gpu
 ```
 
