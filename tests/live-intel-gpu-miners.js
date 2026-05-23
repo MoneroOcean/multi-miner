@@ -15,7 +15,7 @@ const { findConfiguredMinerBinary } = require("./common/live-miner-cache");
 const LIVE_TIMEOUT_MS = envInt("MM_LIVE_TIMEOUT_MS", 90000);
 const KAWPOW_LIVE_TIMEOUT_MS = envInt("MM_LIVE_KAWPOW_TIMEOUT_MS", 180000);
 const C29_LIVE_TIMEOUT_MS = envInt("MM_LIVE_C29_TIMEOUT_MS", 600000);
-const MOMINER_C29_DEVICE = process.env.MM_LIVE_MOMINER_C29_DEVICE || "gpu1*1";
+const MOMINER_C29_DEVICE = process.env.MM_LIVE_MO_MINER_C29_DEVICE || process.env.MM_LIVE_MOMINER_C29_DEVICE || "gpu1*1";
 const MOMINER_NO_BENCH_ALGOS = words(`
   argon2/chukwa argon2/chukwav2 argon2/wrkz c29 cn-heavy/0 cn-heavy/tube cn-heavy/xhv
   cn-lite/0 cn-lite/1 cn-pico/0 cn-pico/tlo cn/0 cn/1 cn/2 cn/ccx cn/double cn/fast
@@ -29,7 +29,7 @@ const GPU_CASES = [
   { algo: "etchash", extraArgs: "--esm 2", kind: "eth", miner: "srbminer", minerAlgo: "etchash", name: "srbminer-etchash-ethstratum2" },
   { algo: "etchash", extraArgs: "--esm 0", kind: "eth", miner: "srbminer", minerAlgo: "etchash", name: "srbminer-etchash-ethproxy" },
   { algo: "kawpow", kind: "eth", miner: "srbminer", minerAlgo: "kawpow", name: "srbminer-kawpow" },
-  { algo: "c29", miner: "mominer", name: "mominer-c29" },
+  { algo: "c29", miner: "mo-miner", name: "mo-miner-c29" },
 ];
 assertEasyEthTargets(GPU_CASES);
 main().catch((error) => {
@@ -39,9 +39,9 @@ main().catch((error) => {
 
 async function main() {
   const hasIntelGpu = hasIntelOpenClGpu();
-  if (hasIntelGpu) await ensureMinerBinaries(["srbminer-multi", "mominer"]);
+  if (hasIntelGpu) await ensureMinerBinaries(["srbminer-multi", "mo-miner"]);
   const binaries = {
-    mominer: findMoMiner(),
+    "mo-miner": findMoMiner(),
     srbminer: findSrbMiner(),
   };
   const results = [];
@@ -66,7 +66,7 @@ async function runCase(binary, testCase) {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "mm-intel-gpu-live-"));
   const args = appArgs(binary, testCase, minerPort, pool.port, tmpDir);
   const app = new MultiMinerApp(args, {
-    checkTimeoutMs: testCase.miner === "mominer" ? 60000 : 8000,
+    checkTimeoutMs: testCase.miner === "mo-miner" ? 60000 : 8000,
     cwd: tmpDir,
     reconnectDelayMs: 1000,
     skipMinerCheck: true,
@@ -75,7 +75,7 @@ async function runCase(binary, testCase) {
   captureOutput(app, output);
 
   try {
-    await withTimeout(app.run(), testCase.miner === "mominer" ? 75000 : 15000, testCase.name + " Multi-Miner did not start");
+    await withTimeout(app.run(), testCase.miner === "mo-miner" ? 75000 : 15000, testCase.name + " Multi-Miner did not start");
     const login = await withTimeout(pool.login, 15000, testCase.name + " Multi-Miner did not log in to fake pool");
     assert.equal(login.method, "login");
     assert.ok(login.params.algo.includes(testCase.algo));
@@ -92,7 +92,7 @@ async function runCase(binary, testCase) {
 }
 
 function appArgs(binary, testCase, minerPort, poolPort, tmpDir) {
-  const command = testCase.miner === "mominer"
+  const command = testCase.miner === "mo-miner"
     ? moMinerCommand(binary, testCase, minerPort, tmpDir)
     : srbMinerCommand(binary, testCase, minerPort);
   const configPath = path.join(tmpDir, "mm.json");
@@ -107,7 +107,9 @@ function findSrbMiner() {
 }
 
 function findMoMiner() {
-  return findConfiguredMinerBinary("MOMINER_PATH", "mominer", process.platform === "win32" ? "mominer.exe" : "mominer");
+  const binaryName = process.platform === "win32" ? "mo-miner.cmd" : "mo-miner";
+  return findConfiguredMinerBinary("MO_MINER_PATH", "mo-miner", binaryName)
+    || findConfiguredMinerBinary("MOMINER_PATH", "mo-miner", binaryName);
 }
 
 function hasIntelOpenClGpu() {
@@ -143,7 +145,7 @@ function srbMinerCommand(binary, testCase, minerPort) {
 }
 
 function moMinerCommand(binary, testCase, minerPort, tmpDir) {
-  const configPath = path.join(tmpDir, "mominer-config.json");
+  const configPath = path.join(tmpDir, "mo-miner-config.json");
   fs.writeFileSync(configPath, JSON.stringify(moMinerConfig(testCase, minerPort), null, 2));
   const rootDir = path.dirname(binary);
   if (process.platform === "win32") return [quoteForCommand(binary), "mine", quoteForCommand(configPath)].join(" ");

@@ -35,14 +35,14 @@ const RELEASES = {
       (asset) => WIN_X64 && /^SRBMiner-Multi-.*-win64\.zip$/i.test(asset.name),
     ]),
   },
-  mominer: {
-    api: "https://api.github.com/repos/MoneroOcean/mominer/releases/latest",
-    prefix: "https://github.com/MoneroOcean/mominer/releases/download/",
-    binary: process.platform === "win32" ? "mominer.exe" : "mominer",
+  "mo-miner": {
+    api: "https://api.github.com/repos/MoneroOcean/mo-miner/releases/latest",
+    prefix: "https://github.com/MoneroOcean/mo-miner/releases/download/",
+    binary: process.platform === "win32" ? "mo-miner.cmd" : "mo-miner",
     suffix: /(\.tar\.(gz|xz|bz2)|\.tgz|\.txz|\.tbz2|\.zip)$/i,
     asset: (assets) => pickAsset(assets, [
-      (asset) => LINUX_X64 && /^mominer-v.*-lin\.tgz$/i.test(asset.name),
-      (asset) => WIN_X64 && /^mominer-v.*-win\.zip$/i.test(asset.name),
+      (asset) => LINUX_X64 && /^mo-miner-v.*-lin\.tgz$/i.test(asset.name),
+      (asset) => WIN_X64 && /^mo-miner-v.*-win\.zip$/i.test(asset.name),
     ]),
   },
   lolminer: {

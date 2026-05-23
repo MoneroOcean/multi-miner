@@ -285,15 +285,15 @@ XMRIG_PATH=/path/to/xmrig MM_LIVE_CPU_CASES=xmrig-rx-0,xmrig-panthera npm run te
 ```
 
 Run the optional local Intel GPU live test. It uses only a fake localhost pool
-and skips if SRBMiner, MoMiner, an algorithm, or an Intel OpenCL GPU is unavailable.
-SRBMiner-Multi and MoMiner are downloaded into this repo's `.cache/live-miners`
+and skips if SRBMiner, mo-miner, an algorithm, or an Intel OpenCL GPU is unavailable.
+SRBMiner-Multi and mo-miner are downloaded into this repo's `.cache/live-miners`
 cache when needed. Override with `MM_LIVE_CACHE_DIR` or a miner-specific path:
 
 ```sh
 npm run test:live:intel-gpu
 SRBMINER_PATH=/path/to/SRBMiner-MULTI npm run test:live:intel-gpu
-MOMINER_PATH=/path/to/mominer MM_LIVE_MOMINER_C29_DEVICE=gpu1*1 npm run test:live:intel-gpu
-MM_LIVE_INTEL_GPU_CASES=srbminer-cn-gpu,mominer-c29 npm run test:live:intel-gpu
+MO_MINER_PATH=/path/to/mo-miner MM_LIVE_MO_MINER_C29_DEVICE=gpu1*1 npm run test:live:intel-gpu
+MM_LIVE_INTEL_GPU_CASES=srbminer-cn-gpu,mo-miner-c29 npm run test:live:intel-gpu
 ```
 
 Run the optional NVIDIA GPU miner matrix. It also uses fake localhost pools only

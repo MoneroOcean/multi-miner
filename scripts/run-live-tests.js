@@ -19,7 +19,7 @@ const CASE_LABELS = {
   "xmrig-ghostrider": "XMRig ghostrider",
   "xmrig-panthera": "XMRig panthera",
   "srbminer-cn-gpu": "SRBMiner cn/gpu",
-  "mominer-c29": "MoMiner c29",
+  "mo-miner-c29": "mo-miner c29",
   "srbminer-autolykos2": "SRBMiner autolykos2",
   "srbminer-etchash": "SRBMiner etchash stratum",
   "srbminer-etchash-ethstratum2": "SRBMiner etchash stratum2",
