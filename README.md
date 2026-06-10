@@ -93,6 +93,8 @@ Useful options:
 
 Current MoneroOcean GPU algorithms covered by Multi-Miner metadata include
 `autolykos2`, `c29`, `cn/gpu`, `etchash`, and `kawpow`.
+Existing `algo_perf.kawpow` values keep their legacy units and are reported unchanged. New
+benchmarks and `--perf_kawpow` values are stored as `algo_perf.kawpow1` in raw H/s.
 
 ## MoneroOcean Examples
 
@@ -125,7 +127,7 @@ SRBMiner-Multi for `autolykos2`, `etchash`, and `kawpow`:
 
 ```sh
 ./mm -p=gulf.moneroocean.stream:ssl20128 -u=YOUR_XMR_WALLET --pass=x \
-  --perf_autolykos2=100000000 --perf_etchash=50000000 --perf_kawpow=0.01 \
+  --perf_autolykos2=100000000 --perf_etchash=50000000 --perf_kawpow=50000000 \
   --autolykos2="./SRBMiner-MULTI --algorithm autolykos2 --pool 127.0.0.1:3333 --wallet YOUR_XMR_WALLET --password x --disable-cpu" \
   --etchash="./SRBMiner-MULTI --algorithm etchash --pool 127.0.0.1:3333 --wallet YOUR_XMR_WALLET --password x --disable-cpu" \
   --kawpow="./SRBMiner-MULTI --algorithm kawpow --pool 127.0.0.1:3333 --wallet YOUR_XMR_WALLET --password x --disable-cpu"
@@ -149,7 +151,7 @@ GMiner for `autolykos2`, `etchash`, and `kawpow`:
 
 ```sh
 ./mm -p=gulf.moneroocean.stream:ssl20128 -u=YOUR_XMR_WALLET --pass=x \
-  --perf_autolykos2=100000000 --perf_etchash=50000000 --perf_kawpow=0.01 \
+  --perf_autolykos2=100000000 --perf_etchash=50000000 --perf_kawpow=50000000 \
   --autolykos2="./miner --algo autolykos2 --server 127.0.0.1 --port 3333 --user YOUR_XMR_WALLET --pass x --proto stratum" \
   --etchash="./miner --algo etchash --server 127.0.0.1 --port 3333 --user YOUR_XMR_WALLET --pass x --proto stratum" \
   --kawpow="./miner --algo kawpow --server 127.0.0.1 --port 3333 --user YOUR_XMR_WALLET --pass x --proto stratum"
@@ -159,7 +161,7 @@ Rigel for `autolykos2`, `etchash`, and `kawpow`:
 
 ```sh
 ./mm -p=gulf.moneroocean.stream:ssl20128 -u=YOUR_XMR_WALLET --pass=x \
-  --perf_autolykos2=100000000 --perf_etchash=50000000 --perf_kawpow=0.01 \
+  --perf_autolykos2=100000000 --perf_etchash=50000000 --perf_kawpow=50000000 \
   --autolykos2="./rigel -a autolykos2 -o stratum+tcp://127.0.0.1:3333 -u YOUR_XMR_WALLET -p x" \
   --etchash="./rigel -a etchash -o stratum+tcp://127.0.0.1:3333 -u YOUR_XMR_WALLET -p x" \
   --kawpow="./rigel -a kawpow -o stratum+tcp://127.0.0.1:3333 -u YOUR_XMR_WALLET -p x"
@@ -169,7 +171,7 @@ T-Rex for `autolykos2`, `etchash`, and `kawpow`:
 
 ```sh
 ./mm -p=gulf.moneroocean.stream:ssl20128 -u=YOUR_XMR_WALLET --pass=x \
-  --perf_autolykos2=100000000 --perf_etchash=50000000 --perf_kawpow=0.01 \
+  --perf_autolykos2=100000000 --perf_etchash=50000000 --perf_kawpow=50000000 \
   --autolykos2="./t-rex -a autolykos2 -o stratum+tcp://127.0.0.1:3333 -u YOUR_XMR_WALLET -p x" \
   --etchash="./t-rex -a etchash -o stratum+tcp://127.0.0.1:3333 -u YOUR_XMR_WALLET -p x" \
   --kawpow="./t-rex -a kawpow -o stratum+tcp://127.0.0.1:3333 -u YOUR_XMR_WALLET -p x"

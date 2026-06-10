@@ -1,6 +1,6 @@
 "use strict";
 
-const { BENCH_ALGOS, benchAlgoDeps } = require("./algorithms");
+const { BENCH_ALGOS, benchAlgoDeps, hasAlgoPerf } = require("./algorithms");
 const { forEachHashrate } = require("./hashrate");
 const { benchmarkSubscribeReply } = require("./miner-server");
 const { detectMinerProtocol, ethProxyWork, grinJsonReply, jsonReply } = require("./protocol");
@@ -10,7 +10,7 @@ const { treeKill } = require("./process-manager");
 function runBenchmarkRuns(options, callback) {
   const queue = [];
   for (const algo of BENCH_ALGOS) {
-    if (options.config.algo_perf[algo] || !(algo in options.config.algos)) continue;
+    if (hasAlgoPerf(options.config, algo) || !(algo in options.config.algos)) continue;
     queue.push((resolve) => runOneBenchmark(options, algo, resolve));
   }
 

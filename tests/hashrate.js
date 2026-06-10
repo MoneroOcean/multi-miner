@@ -15,7 +15,7 @@ describe("hashrate extraction", () => {
     ["GMiner c29", "GPU0 42.0 G/s", "c29", 1],
     ["GMiner table", "|  0 A16-16Q  19.24 MH/s  0/0/0 |", "etchash", 19240000],
     ["TeamRedMiner", "Total GPU: 11.2 kh/s", "rx/0", 11200],
-    ["T-Rex", "Hashrate: 120.5 MH/s", "kawpow", 120500000 / 0x100000000],
+    ["T-Rex", "Hashrate: 120.5 MH/s", "kawpow", 120500000],
     ["Rigel", "speed 10s: 77.7 MH/s", "etchash", 77700000],
     ["Rigel table", "|          Total: 77.7 MH/s|   -|  0|  0|n/a|", "etchash", 77700000],
     ["BzMiner", "Total: 88.8 MH/s", "ethash", 88800000],

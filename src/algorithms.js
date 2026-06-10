@@ -1,6 +1,7 @@
 "use strict";
 
 const DEFAULT_ALGO = "rx/0";
+const LEGACY_KAWPOW_HASHRATE_SCALE = 0x100000000;
 
 const BENCH_ALGOS = [
   "cn/r",
@@ -49,7 +50,7 @@ const BENCH_DEPS = {
   "cn/gpu": { "cn/gpu": 1 },
   "argon2/chukwa": { "argon2/chukwa": 1 },
   "astrobwt": { astrobwt: 1 },
-  kawpow: { kawpow: 1 },
+  kawpow: { kawpow1: 1 },
   "rx/0": { "rx/0": 1, "rx/sfx": 1 },
   "rx/graft": { "rx/graft": 1 },
   "rx/arq": { "rx/arq": 1 },
@@ -67,8 +68,6 @@ const BENCH_DEPS = {
 
 function algoHashrateFactor(algo) {
   switch (algo) {
-    case "kawpow":
-      return 1 / 0x100000000;
     case "c29":
       return 1 / 42;
     case "c29s":
@@ -100,6 +99,17 @@ function knownPerfAlgos() {
 
 function isKnownPerfAlgo(algo) {
   return knownPerfAlgos().has(algo);
+}
+
+function hasAlgoPerf(config, algo) {
+  if (algo === "kawpow") return Boolean(config.algo_perf.kawpow1 || config.algo_perf.kawpow);
+  return Boolean(config.algo_perf[algo]);
+}
+
+function localAlgoPerf(config, algo) {
+  if (algo !== "kawpow") return config.algo_perf[algo];
+  if (config.algo_perf.kawpow1) return config.algo_perf.kawpow1;
+  return config.algo_perf.kawpow * LEGACY_KAWPOW_HASHRATE_SCALE;
 }
 
 function expandAlgoPerf(config, algo, perf) {
@@ -141,6 +151,8 @@ module.exports = {
   assignAlgoCommand,
   benchAlgoDeps,
   expandAlgoPerf,
+  hasAlgoPerf,
   isKnownPerfAlgo,
+  localAlgoPerf,
   normalizePoolAlgo,
 };

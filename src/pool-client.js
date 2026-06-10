@@ -5,6 +5,28 @@ const tls = require("tls");
 const { createJsonLineParser, stringifyLine } = require("./json-lines");
 const { parsePoolAddress } = require("./config");
 
+function poolAlgoName(config, algo) {
+  if (algo !== "kawpow") return algo;
+  return config.algo_perf.kawpow1 ? "kawpow1" : "kawpow";
+}
+
+function poolLoginParams(config, agent) {
+  const algos = Array.from(new Set(Object.keys(config.algos).map((algo) => poolAlgoName(config, algo))));
+  const algoPerf = {};
+  for (const [algo, perf] of Object.entries(config.algo_perf)) {
+    if (algo === "kawpow" && config.algo_perf.kawpow1) continue;
+    algoPerf[algo] = perf;
+  }
+  return {
+    login: config.user,
+    pass: config.pass,
+    agent,
+    algo: algos,
+    "algo-perf": algoPerf,
+    "algo-min-time": config.algo_min_time,
+  };
+}
+
 function connectPool(options) {
   const config = options.config;
   const logger = options.logger;
@@ -25,14 +47,7 @@ function connectPool(options) {
       id: 1,
       jsonrpc: "2.0",
       method: "login",
-      params: {
-        login: config.user,
-        pass: config.pass,
-        agent: options.agent,
-        algo: Object.keys(config.algos),
-        "algo-perf": config.algo_perf,
-        "algo-min-time": config.algo_min_time,
-      },
+      params: poolLoginParams(config, options.agent),
     }, logger, options.debug);
   });
 
@@ -86,5 +101,6 @@ function isKeepaliveReply(json) {
 
 module.exports = {
   connectPool,
+  poolLoginParams,
   writePoolSocket,
 };

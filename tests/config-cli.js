@@ -6,7 +6,7 @@ const os = require("os");
 const path = require("path");
 const { describe, it } = require("node:test");
 
-const { BENCH_ALGOS, CURRENT_GPU_ALGOS, algoAliases, benchAlgoDeps, normalizePoolAlgo } = require("../src/algorithms");
+const { BENCH_ALGOS, CURRENT_GPU_ALGOS, algoAliases, benchAlgoDeps, localAlgoPerf, normalizePoolAlgo } = require("../src/algorithms");
 const { parseCommand } = require("../src/command");
 const { parseArgs, parsePoolAddress } = require("../src/config");
 const { createJsonLineParser, stringifyLine } = require("../src/json-lines");
@@ -19,10 +19,12 @@ describe("config and CLI", () => {
   });
 
   it("parses perf options for current algorithms and dependencies", () => {
-    const parsed = parseArgs(["--perf_rx/0=42", "--perf_etchash=100"], baseParseOptions());
+    const parsed = parseArgs(["--perf_rx/0=42", "--perf_etchash=100", "--perf_kawpow=20000000"], baseParseOptions());
     assert.equal(parsed.config.algo_perf["rx/0"], 42);
     assert.equal(parsed.config.algo_perf["rx/sfx"], 42);
     assert.equal(parsed.config.algo_perf.etchash, 100);
+    assert.equal(parsed.config.algo_perf.kawpow1, 20000000);
+    assert.equal("kawpow" in parsed.config.algo_perf, false);
   });
 
   it("loads JSON config without executing JavaScript", () => {
@@ -32,6 +34,14 @@ describe("config and CLI", () => {
     const parsed = parseArgs([], baseParseOptions({ cwd: dir }));
     assert.equal(parsed.config.pools[0], "pool.test:3333");
     assert.equal(parsed.config.algos["rx/0"], "miner");
+  });
+
+  it("keeps legacy saved KawPow performance under the legacy key", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mm-kawpow-config-"));
+    fs.writeFileSync(path.join(dir, "mm.json"), "{\"algo_perf\":{\"kawpow\":0.01}}\n");
+    const parsed = parseArgs([], baseParseOptions({ cwd: dir }));
+    assert.equal(parsed.config.algo_perf.kawpow, 0.01);
+    assert.equal("kawpow1" in parsed.config.algo_perf, false);
   });
 
   it("validates pool addresses", () => {
@@ -68,6 +78,9 @@ describe("algorithm metadata", () => {
     assert.ok(algoAliases("cryptonight/r").includes("cn/r"));
     assert.equal(benchAlgoDeps("cn/r", 30)["cn/fast"], 60);
     assert.equal(benchAlgoDeps("rx/0", 10)["rx/sfx"], 10);
+    assert.equal(benchAlgoDeps("kawpow", 20_000_000).kawpow1, 20_000_000);
+    assert.equal(localAlgoPerf({ algo_perf: { kawpow: 0.01 } }, "kawpow"), 0.01 * 0x100000000);
+    assert.equal(localAlgoPerf({ algo_perf: { kawpow1: 20_000_000 } }, "kawpow"), 20_000_000);
     assert.equal(normalizePoolAlgo("cuckaroo", { proofsize: 42 }), "c29");
   });
 });

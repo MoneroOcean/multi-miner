@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 "use strict";
 
-const { DEFAULT_ALGO, normalizePoolAlgo } = require("./src/algorithms");
+const { DEFAULT_ALGO, localAlgoPerf, normalizePoolAlgo } = require("./src/algorithms");
 const { runBenchmarkRuns } = require("./src/benchmark");
 const { createDefaultConfig, createDefaultFlags, parseArgs, printHelp, saveConfigFile } = require("./src/config");
 const { formatDiagnostics, validateConfig } = require("./src/diagnostics");
@@ -453,7 +453,7 @@ class MultiMinerApp {
     const timer = setInterval(() => {
       if (!this.currPoolSocket || !this.minerServer.socket || this.lastMinerHashrate === null) return;
       if (this.lastAlgoChangeTime && Date.now() - this.lastAlgoChangeTime < 15 * 60 * 1000) return;
-      const minHashrate = this.config.algo_perf[this.currAlgo] * this.config.hashrate_watchdog / 100;
+      const minHashrate = localAlgoPerf(this.config, this.currAlgo) * this.config.hashrate_watchdog / 100;
       if (this.lastMinerHashrate < minHashrate) {
         this.logger.err("Current miner hashrate " + this.lastMinerHashrate + " is below minimum " + minHashrate + " hashrate threshold. Restarting it...");
         this.replaceMiner(this.currMiner);
