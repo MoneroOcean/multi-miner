@@ -22,6 +22,8 @@ function createJsonLineParser(onJson, onInvalid) {
       buffer += chunk.toString();
       if (!buffer.includes("\n")) return;
       const lines = buffer.split("\n");
+      // If the chunk ended on a newline the split leaves a trailing "" with no partial line to keep;
+      // otherwise the last element is an incomplete line that must be carried over to the next chunk.
       buffer = buffer.endsWith("\n") ? "" : lines.pop();
       for (const line of lines) handleLine(line);
     },

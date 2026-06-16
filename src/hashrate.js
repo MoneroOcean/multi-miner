@@ -95,6 +95,7 @@ function forEachHashrate(str, algo, cb, onlyParserIndex) {
     while (match) {
       const hashrate = hashrateFromMatch(match, entry, algo);
       if (hashrate !== null && cb(hashrate, entry, i) === false) return false;
+      // A zero-width match leaves lastIndex unchanged; nudge it forward so the global exec loop cannot spin forever.
       if (regex.lastIndex === match.index) regex.lastIndex++;
       match = regex.exec(text);
     }
