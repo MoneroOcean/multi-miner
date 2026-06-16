@@ -1,4 +1,20 @@
-# Multi-Miner
+<div align="center">
+
+# multi-miner
+
+Local stratum shim that adds MoneroOcean-style algorithm switching to miners that lack pool-side algo switching.
+
+<p>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg" alt="License"></a>
+  <img src="https://img.shields.io/badge/node-%E2%89%A522.9.0-brightgreen.svg" alt="Node >=22.9.0">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg" alt="Platform">
+  <img src="https://img.shields.io/badge/focus-multi--algo%20miner%20manager-2da44e.svg" alt="Focus">
+  <a href="https://github.com/MoneroOcean"><img src="https://img.shields.io/badge/MoneroOcean-ecosystem-6f42c1.svg" alt="MoneroOcean"></a>
+</p>
+
+</div>
+
+## Overview
 
 Multi-Miner adds MoneroOcean-style algorithm switching support to stratum
 miners that do not implement pool-side algo switching themselves. It runs a
@@ -7,6 +23,23 @@ and starts the configured miner command for each algorithm requested by the
 pool.
 
 Multi-Miner does not add a mining fee. The project remains GPLv3.
+
+Multi-Miner sits between your miner and the [MoneroOcean pool backend](https://github.com/MoneroOcean/nodejs-pool):
+the pool announces which algorithm to mine, and Multi-Miner swaps the active
+miner command to match.
+
+## Features
+
+- Local stratum endpoint (default `127.0.0.1:3333`) that any miner can point at.
+- Per-algorithm miner commands, switched automatically as the pool requests them.
+- Support for "smart" miners that report their own supported algorithms (`--miner`).
+- Multiple upstream pools, with additional `--pool` entries acting as backups.
+- TLS to the upstream pool via `sslPORT` / `tlsPORT` while keeping the local link plaintext.
+- Built-in benchmarking against a local fake job to populate `algo_perf`.
+- Hashrate parsing for XMRig, xmr-stak, SRBMiner-Multi, lolMiner, GMiner, Rigel,
+  T-Rex, TeamRedMiner, Team Black Miner, CryptoDredge, Claymore, and legacy formats.
+- Watchdog and hashrate-watchdog restarts for stalled miners.
+- Config validation via `--diagnostics`, with no external pool contact required.
 
 ## Quick Start
 
@@ -73,23 +106,23 @@ Minimal `mm.json`:
 
 Useful options:
 
-```text
---pool=<host:port> (-p)             Adds a pool. Use sslPORT or tlsPORT for TLS.
---host=<hostname>                   Local miner bind host. Default: 127.0.0.1.
---port=<number>                     Local miner bind port. Default: 3333.
---user=<wallet> (-u)                Pool login. Uses first miner login if omitted.
---pass=<worker>                     Pool password/worker. Uses first miner pass if omitted.
---miner=<command> (-m)              Smart miner that reports supported algorithms.
---<algo>=<command>                  Miner command for one algorithm.
---perf_<algo>=<hashrate>            Expected hashrate; use 0 to benchmark again.
---algo_min_time=<seconds>           Minimum time pool should keep one algorithm.
---watchdog=<seconds> (-w)           Restart miner after no submits; 0 disables.
---hashrate_watchdog=<percent>       Restart if reported hashrate drops below threshold.
---miner_stdin                       Inherit stdin for miner processes.
---diagnostics                       Validate config and exit.
---quiet (-q), --verbose (-v), --debug
---log=<file>, --no-config-save, --help
-```
+| Option | Description |
+| --- | --- |
+| `--pool=<host:port>` (`-p`) | Adds a pool. Use `sslPORT` or `tlsPORT` for TLS. |
+| `--host=<hostname>` | Local miner bind host. Default: `127.0.0.1`. |
+| `--port=<number>` | Local miner bind port. Default: `3333`. |
+| `--user=<wallet>` (`-u`) | Pool login. Uses first miner login if omitted. |
+| `--pass=<worker>` | Pool password/worker. Uses first miner pass if omitted. |
+| `--miner=<command>` (`-m`) | Smart miner that reports supported algorithms. |
+| `--<algo>=<command>` | Miner command for one algorithm. |
+| `--perf_<algo>=<hashrate>` | Expected hashrate; use `0` to benchmark again. |
+| `--algo_min_time=<seconds>` | Minimum time pool should keep one algorithm. |
+| `--watchdog=<seconds>` (`-w`) | Restart miner after no submits; `0` disables. |
+| `--hashrate_watchdog=<percent>` | Restart if reported hashrate drops below threshold. |
+| `--miner_stdin` | Inherit stdin for miner processes. |
+| `--diagnostics` | Validate config and exit. |
+| `--quiet` (`-q`), `--verbose` (`-v`), `--debug` | Logging verbosity. |
+| `--log=<file>`, `--no-config-save`, `--help` | Log file, skip config save, usage. |
 
 Current MoneroOcean GPU algorithms covered by Multi-Miner metadata include
 `autolykos2`, `c29`, `cn/gpu`, `etchash`, and `kawpow`.
@@ -247,7 +280,7 @@ Troubleshooting notes:
 
 Requirements:
 
-- Node.js 18 or newer for source usage and tests.
+- Node.js 22.9.0 or newer (npm 11.10.0 or newer) for source usage and tests.
 - Network access only for installing build tooling or contacting real pools.
 
 Install the pinned development toolchain from the committed lockfile:
@@ -256,7 +289,26 @@ Install the pinned development toolchain from the committed lockfile:
 npm ci
 ```
 
-Run tests:
+Build the current platform binary:
+
+```sh
+npm run build:current
+```
+
+Build all release targets:
+
+```sh
+npm run build:release
+```
+
+The release workflow publishes clean per-platform archives containing only the
+binary, `README.md`, `LICENSE`, and user documentation files. Source, tests,
+CI metadata, caches, and development artifacts are excluded from release
+archives.
+
+## Testing
+
+Run the unit test suite, quality checks, and dependency audit:
 
 ```sh
 npm test
@@ -318,19 +370,20 @@ built for the installed NVIDIA driver/GPU and must be able to load its CUDA
 runtime dependencies; either install the matching CUDA runtime system-wide or
 place libraries such as `libnvrtc.so.*` beside `libxmrig-cuda.so`.
 
-Build the current platform binary:
+## MoneroOcean ecosystem
 
-```sh
-npm run build:current
-```
+| Component | Role |
+| --- | --- |
+| [nodejs-pool](https://github.com/MoneroOcean/nodejs-pool) | Pool backend — stratum, share storage, payments |
+| [mo-pool-ui](https://github.com/MoneroOcean/mo-pool-ui) | Static web frontend for the pool |
+| [xmr-node-proxy](https://github.com/MoneroOcean/xmr-node-proxy) | Stratum proxy / share aggregator |
+| [mo-miner](https://github.com/MoneroOcean/mo-miner) | MoneroOcean end-user CPU/GPU mining client (multi-algo) |
+| [multi-miner](https://github.com/MoneroOcean/multi-miner) | Multi-algo miner manager |
+| [node-powhash](https://github.com/MoneroOcean/node-powhash) | Native multi-algo PoW hashing addon |
+| [node-randomx](https://github.com/MoneroOcean/node-randomx) | Native RandomX hashing addon |
+| [node-blocktemplate](https://github.com/MoneroOcean/node-blocktemplate) | Native block-template & serialization addon |
+| [grpc-json-proxy](https://github.com/MoneroOcean/grpc-json-proxy) | gRPC ↔ JSON-RPC proxy (Tari base node) |
 
-Build all release targets:
+## License
 
-```sh
-npm run build:release
-```
-
-The release workflow publishes clean per-platform archives containing only the
-binary, `README.md`, `LICENSE`, and user documentation files. Source, tests,
-CI metadata, caches, and development artifacts are excluded from release
-archives.
+GPL-3.0-or-later. See [LICENSE](LICENSE).
