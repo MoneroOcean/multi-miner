@@ -130,19 +130,7 @@ function grinProofSize(algo) {
 
 function ethBenchmarkJob(algo) {
   if (algo === "kawpow") {
-    return stringifyLine({
-      jsonrpc: "2.0",
-      method: "mining.notify",
-      params: [
-        "benchmark1",
-        "4c38e8a5f7b2944d1e4274635d828519b97bc64a1f1c7896ecdbb139988aa0e8",
-        "accf7d1311da015b8dd41569c845c0ac739f0637707b8a117119fe1b5aeaa011",
-        "000000000002bd75000000000000000000000000000000000000000000000000",
-        true,
-        1500000,
-        "1b0290a7",
-      ],
-    });
+    return stringifyLine({ jsonrpc: "2.0", method: "mining.notify", params: ethBenchmarkParams("kawpow") });
   }
   if (algo === "autolykos2") return autolykosJob();
   return ethashJob();
