@@ -84,15 +84,17 @@ function createEthProxyWorkTracker(limit) {
   };
 }
 
+const MAX_ETH_PROXY_TARGET = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+
 function ethProxyTarget(message) {
   if (message && message.method === "mining.set_target" && Array.isArray(message.params)) return hex(message.params[0]);
   if (message && message.method === "mining.set_difficulty" && Array.isArray(message.params)) return difficultyTarget(message.params[0]);
-  return "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+  return MAX_ETH_PROXY_TARGET;
 }
 
 function difficultyTarget(value) {
   const difficulty = Number(value);
-  if (!Number.isFinite(difficulty) || difficulty <= 0) return "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+  if (!Number.isFinite(difficulty) || difficulty <= 0) return MAX_ETH_PROXY_TARGET;
   const scale = 1000000n;
   const scaledDifficulty = BigInt(Math.max(1, Math.floor(difficulty * Number(scale))));
   const max = (1n << 256n) - 1n;
