@@ -25,15 +25,6 @@ function createJsonLineParser(onJson, onInvalid) {
       buffer = buffer.endsWith("\n") ? "" : lines.pop();
       for (const line of lines) handleLine(line);
     },
-
-    flush() {
-      if (buffer) handleLine(buffer);
-      buffer = "";
-    },
-
-    getBuffer() {
-      return buffer;
-    },
   };
 }
 
