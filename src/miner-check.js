@@ -28,7 +28,7 @@ function checkMiners(options, callback) {
   }
 
   if (!options.flags.quiet && queue.length) {
-    options.logger.log("Checking miner configurations (make sure they all configured to connect to " + options.config.miner_host + ":" + options.config.miner_port + " pool)");
+    options.logger.log("Checking miner configurations (make sure they are all configured to connect to " + options.config.miner_host + ":" + options.config.miner_port + " pool)");
   }
 
   function next() {

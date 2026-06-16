@@ -65,7 +65,7 @@ function connectPool(options) {
         options.onMessage(json);
       }
     } else if (logger) {
-      logger.err("Ignoring pool (" + poolLabel + ") message since pool did not report no errors yet: " + JSON.stringify(json));
+      logger.err("Ignoring pool (" + poolLabel + ") message since pool has not confirmed login yet: " + JSON.stringify(json));
     }
   }, (message) => {
     if (logger) logger.err("Can't parse message from the pool (" + poolLabel + "): " + message);
