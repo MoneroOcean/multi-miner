@@ -189,6 +189,10 @@ function moMinerConfig(testCase, minerPort) {
     }])),
     default_msrs: {},
     log_level: 0,
+    // mom v0.7.0 benchmarks the active MoneroOcean GPU algos (autolykos2/etchash/kawpow/pearl) at
+    // startup by default (bench_algo_params=1); they aren't in MOM_NO_BENCH_ALGOS, so without this the
+    // live test triggers slow -- and on some Intel Xe GPUs unstable -- DAG benchmarks before mining.
+    bench_algo_params: 0,
   };
 }
 
