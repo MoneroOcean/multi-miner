@@ -18,13 +18,16 @@
     "test:live:intel-gpu": "node tests/live-intel-gpu-miners.js",
     "test:live:nvidia-gpu": "node tests/live-nvidia-gpu-miners.js",
     "quality": "node scripts/check-quality.js",
+    "lint": "eslint .",
     "audit": "npm audit --audit-level=moderate",
     "build:current": "node scripts/build-current.js",
     "build:target": "node scripts/build-target.js",
     "build:release": "node scripts/build-release.js"
   },
   "devDependencies": {
-    "@yao-pkg/pkg": "6.10.1"
+    "@yao-pkg/pkg": "6.10.1",
+    "eslint": "9.39.4",
+    "globals": "17.6.0"
   },
   "pkg": {
     "scripts": [
