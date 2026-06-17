@@ -13,6 +13,6 @@ const targets = [
 
 for (const [platform, arch] of targets) {
   const target = [RUNTIME, platform, arch].join("-");
-  const output = path.join("dist", platform + "-" + arch, binaryName(platform));
+  const output = path.join("dist", `${platform  }-${  arch}`, binaryName(platform));
   runPkg(target, output);
 }

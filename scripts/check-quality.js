@@ -24,7 +24,7 @@ function checkFunctions(file, text) {
     const body = collectBody(lines, i);
     if (!body) continue;
     const crap = complexity(body);
-    if (crap >= MAX_CRAP) fail(file + ":" + (i + 1) + " " + name + " has CRAP proxy " + crap + ", max is " + (MAX_CRAP - 1));
+    if (crap >= MAX_CRAP) fail(`${file  }:${  i + 1  } ${  name  } has CRAP proxy ${  crap  }, max is ${  MAX_CRAP - 1}`);
   }
 }
 
@@ -32,7 +32,7 @@ function checkFile(abs) {
   const label = path.relative(path.resolve(__dirname, ".."), abs);
   const text = fs.readFileSync(abs, "utf8");
   const loc = text.split(/\r?\n/).length;
-  if (loc > MAX_LOC) fail(label + " has " + loc + " LOC, max is " + MAX_LOC);
+  if (loc > MAX_LOC) fail(`${label  } has ${  loc  } LOC, max is ${  MAX_LOC}`);
   checkFunctions(label, text);
 }
 
@@ -90,5 +90,5 @@ function stripStrings(line) {
 
 function fail(message) {
   failures++;
-  process.stderr.write("quality: " + message + "\n");
+  process.stderr.write(`quality: ${  message  }\n`);
 }

@@ -13,7 +13,7 @@ const TARGETS = {
 
 const name = process.argv[2];
 if (!TARGETS[name]) {
-  process.stderr.write("Usage: node scripts/build-target.js <" + Object.keys(TARGETS).join("|") + ">\n");
+  process.stderr.write(`Usage: node scripts/build-target.js <${  Object.keys(TARGETS).join("|")  }>\n`);
   process.exit(1);
 }
 

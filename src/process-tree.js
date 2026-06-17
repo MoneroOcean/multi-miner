@@ -3,24 +3,26 @@
 const childProcess = require("child_process");
 
 function treeKill(pid, signal, callback) {
+  let killSignal = signal;
+  let killCallback = callback;
   if (typeof signal === "function" && callback === undefined) {
-    callback = signal;
-    signal = undefined;
+    killCallback = signal;
+    killSignal = undefined;
   }
   if (!pid) {
-    if (callback) callback();
+    if (killCallback) killCallback();
     return;
   }
 
   switch (process.platform) {
     case "win32":
-      childProcess.execFile("taskkill", ["/pid", String(pid), "/T", "/F"], callback || (() => {}));
+      childProcess.execFile("taskkill", ["/pid", String(pid), "/T", "/F"], killCallback || (() => {}));
       break;
     case "darwin":
-      buildProcessTree(pid, spawnPgrep, (error, tree) => finishKill(error, tree, signal, callback));
+      buildProcessTree(pid, spawnPgrep, (error, tree) => finishKill(error, tree, killSignal, killCallback));
       break;
     default:
-      buildProcessTree(pid, spawnPs, (error, tree) => finishKill(error, tree, signal, callback));
+      buildProcessTree(pid, spawnPs, (error, tree) => finishKill(error, tree, killSignal, killCallback));
   }
 }
 

@@ -6,12 +6,12 @@ const { createJsonLineParser } = require("../../src/json-lines");
 
 function assertNoLiveFailures(assert, results) {
   const failures = results.filter((result) => result.status === "failed");
-  assert.equal(failures.length, 0, failures.map((result) => result.name + ": " + result.reason + "\n" + (result.output || "")).join("\n"));
+  assert.equal(failures.length, 0, failures.map((result) => `${result.name  }: ${  result.reason  }\n${  result.output || ""}`).join("\n"));
 }
 
 function captureOutput(app, output) {
-  app.logger.log = (message) => output.push(">>> " + message);
-  app.logger.err = (message) => output.push("!!! " + message);
+  app.logger.log = (message) => output.push(`>>> ${  message}`);
+  app.logger.err = (message) => output.push(`!!! ${  message}`);
   app.logger.miner = (message) => output.push(String(message));
 }
 
@@ -46,9 +46,9 @@ function createJsonLineServer(onLine, extra) {
   });
 }
 
-function quoteForCommand(value) { return "\"" + String(value).replace(/["\\$`]/g, "\\$&") + "\""; }
+function quoteForCommand(value) { return `"${  String(value).replace(/["\\$`]/g, "\\$&")  }"`; }
 
-function shellQuote(value) { return "'" + String(value).replace(/'/g, "'\\''") + "'"; }
+function shellQuote(value) { return `'${  String(value).replace(/'/g, "'\\''")  }'`; }
 
 function selectedCases(cases, envName) {
   const requested = new Set((process.env[envName] || "").split(",").filter(Boolean));
@@ -59,7 +59,7 @@ function writeLiveConfig(configPath, minerPort, poolPort, algo, command) {
   fs.writeFileSync(configPath, JSON.stringify({
     miner_host: "127.0.0.1",
     miner_port: minerPort,
-    pools: ["127.0.0.1:" + poolPort],
+    pools: [`127.0.0.1:${  poolPort}`],
     algos: { [algo]: command },
     algo_perf: { [algo]: 1 },
     user: "wallet",
@@ -77,7 +77,7 @@ async function waitForLiveSubmit(pool, name, output, timeoutMs) {
     if (pool.submits.length > 0) return "submit";
     await delay(500);
   }
-  throw new Error(name + " timed out; tail:\n" + tail(output.join("\n")));
+  throw new Error(`${name  } timed out; tail:\n${  tail(output.join("\n"))}`);
 }
 
 function withTimeout(promise, timeoutMs, message) {
@@ -89,8 +89,8 @@ function withTimeout(promise, timeoutMs, message) {
 }
 
 function printSimpleResult(prefix, result) {
-  const suffix = result.status === "passed" ? "(" + result.outcome + ")" : result.reason;
-  process.stdout.write(prefix + ": " + result.name + " " + result.status + " " + suffix + "\n");
+  const suffix = result.status === "passed" ? `(${  result.outcome  })` : result.reason;
+  process.stdout.write(`${prefix  }: ${  result.name  } ${  result.status  } ${  suffix  }\n`);
 }
 
 function words(value) { return value.trim().split(/\s+/).filter(Boolean); }

@@ -24,7 +24,7 @@ const CPU_CASES = [
 ].map(([name, algo]) => ({ algo, name }));
 
 main().catch((error) => {
-  process.stderr.write((error && error.stack ? error.stack : String(error)) + "\n");
+  process.stderr.write(`${error && error.stack ? error.stack : String(error)  }\n`);
   process.exitCode = 1;
 });
 
@@ -57,8 +57,8 @@ async function runCase(binary, testCase) {
   captureOutput(app, output);
 
   try {
-    await withTimeout(app.run(), 15000, testCase.name + " Multi-Miner did not start");
-    const login = await withTimeout(pool.login, 15000, testCase.name + " Multi-Miner did not log in to fake pool");
+    await withTimeout(app.run(), 15000, `${testCase.name  } Multi-Miner did not start`);
+    const login = await withTimeout(pool.login, 15000, `${testCase.name  } Multi-Miner did not log in to fake pool`);
     assert.equal(login.method, "login");
     assert.ok(login.params.algo.includes(testCase.algo));
     await waitForLiveSubmit(pool, testCase.name, output, LIVE_TIMEOUT_MS);
@@ -87,13 +87,13 @@ function xmrigCommand(binary, testCase, minerPort, tmpDir) {
   const configPath = path.join(tmpDir, "xmrig-config.json");
   fs.writeFileSync(configPath, JSON.stringify(xmrigSeedConfig(testCase.algo), null, 2));
   const dir = path.dirname(binary);
-  const exe = "./" + path.basename(binary);
+  const exe = `./${  path.basename(binary)}`;
   const inner = [
-    "cd " + shellQuote(dir),
+    `cd ${  shellQuote(dir)}`,
     "&&",
     shellQuote(exe),
-    "-c " + shellQuote(configPath),
-    "-o 127.0.0.1:" + minerPort,
+    `-c ${  shellQuote(configPath)}`,
+    `-o 127.0.0.1:${  minerPort}`,
     "-u wallet",
     "-p x",
     "--rig-id mm-live",
@@ -105,7 +105,7 @@ function xmrigCommand(binary, testCase, minerPort, tmpDir) {
     "--keepalive",
     "--no-color",
   ].join(" ");
-  return "/bin/sh -lc " + quoteForCommand(inner);
+  return `/bin/sh -lc ${  quoteForCommand(inner)}`;
 }
 
 function xmrigSeedConfig(algo) {

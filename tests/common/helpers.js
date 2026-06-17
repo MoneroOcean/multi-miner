@@ -26,12 +26,12 @@ function nearlyEqual(actual, expected) {
 }
 
 function fakeMinerCommand(port, protocol, algo) {
-  return quote(process.execPath) + " " + quote(path.join(__dirname, "..", "fixtures", "fake-miner.js")) +
-    " --host 127.0.0.1 --port " + port + " --protocol " + protocol + " --algo " + algo;
+  return `${quote(process.execPath)  } ${  quote(path.join(__dirname, "..", "fixtures", "fake-miner.js")) 
+    } --host 127.0.0.1 --port ${  port  } --protocol ${  protocol  } --algo ${  algo}`;
 }
 
 function quote(value) {
-  return "\"" + String(value).replace(/"/g, "\\\"") + "\"";
+  return `"${  String(value).replace(/"/g, "\\\"")  }"`;
 }
 
 function createFakePool(algo, mode) {

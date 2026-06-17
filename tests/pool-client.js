@@ -38,7 +38,7 @@ describe("pool client", () => {
   it("fails over exactly once when the pool gracefully closes after login", async () => {
     const server = net.createServer((socket) => {
       socket.once("data", () => {
-        socket.write(JSON.stringify({ id: 1, jsonrpc: "2.0", result: { status: "OK" }, error: null }) + "\n");
+        socket.write(`${JSON.stringify({ id: 1, jsonrpc: "2.0", result: { status: "OK" }, error: null })  }\n`);
         socket.end();
       });
     });
@@ -51,7 +51,7 @@ describe("pool client", () => {
         const timer = setTimeout(() => reject(new Error("onError was not called: no failover on graceful post-login FIN")), 3000);
         connectPool({
           agent: "multi-miner/test",
-          config: { pools: ["127.0.0.1:" + port], user: "wallet", pass: "x", algo_min_time: 60, algos: { "rx/0": "miner" }, algo_perf: { "rx/0": 1000 } },
+          config: { pools: [`127.0.0.1:${  port}`], user: "wallet", pass: "x", algo_min_time: 60, algos: { "rx/0": "miner" }, algo_perf: { "rx/0": 1000 } },
           debug: false,
           logger: null,
           poolNum: 0,

@@ -48,7 +48,7 @@ function printHelp(stream) {
     "\t--port=<number>:               \tdefines port that will be used for miner connections (3333 by default)",
     "\t--user=<wallet> (-u):          \t<wallet> to use as pool user login (will be taken from the first miner otherwise)",
     "\t--pass=<miner_id>:             \t<miner_id> to use as pool pass login (will be taken from the first miner otherwise)",
-    "\t--perf_<algo>=<hashrate>       \tSets hashrate for algo that is: " + BENCH_ALGOS.join(", "),
+    `\t--perf_<algo>=<hashrate>       \tSets hashrate for algo that is: ${  BENCH_ALGOS.join(", ")}`,
     "\t--algo_min_time=<seconds>      \tSets <seconds> minimum time pool should keep our miner on one algo (0 default, set higher for starting miners)",
     "\t--miner=<command_line> (-m):   \t<command_line> to start smart miner that can report algo itself",
     "\t--<algo>=<command_line>:       \t<command_line> to start miner for <algo> that can not report it itself",
@@ -63,18 +63,18 @@ function printHelp(stream) {
     "\t--no-config-save:              \tDo not save config file",
     "\t--help (-help,-h,-?):          \tPrints this help text",
   ];
-  out.write(lines.join("\n") + "\n");
+  out.write(`${lines.join("\n")  }\n`);
 }
 
 function loadConfigFile(fileName, config, logger) {
   const configFileAbs = path.resolve(fileName);
   if (!fs.existsSync(configFileAbs)) {
-    if (logger) logger.err("Config file " + configFileAbs + " does not exist");
+    if (logger) logger.err(`Config file ${  configFileAbs  } does not exist`);
     return false;
   }
 
   try {
-    if (logger && logger.verbose) logger.verbose("Loading " + configFileAbs + " config file");
+    if (logger && logger.verbose) logger.verbose(`Loading ${  configFileAbs  } config file`);
     const parsed = JSON.parse(fs.readFileSync(configFileAbs, "utf8"));
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       throw new Error("top-level JSON value must be an object");
@@ -85,7 +85,7 @@ function loadConfigFile(fileName, config, logger) {
     if (!config.algo_perf) config.algo_perf = {};
     return true;
   } catch (error) {
-    if (logger) logger.err("Can't load " + configFileAbs + " config file: " + error.message);
+    if (logger) logger.err(`Can't load ${  configFileAbs  } config file: ${  error.message}`);
     return false;
   }
 }
@@ -93,7 +93,7 @@ function loadConfigFile(fileName, config, logger) {
 function saveConfigFile(fileName, config, logger) {
   const body = JSON.stringify(config, null, " ");
   fs.writeFile(fileName, body, (error) => {
-    if (error && logger) logger.err("Error saving " + fileName + " file");
+    if (error && logger) logger.err(`Error saving ${  fileName  } file`);
   });
   return body;
 }
@@ -124,11 +124,11 @@ function numberValue(value, parser) { const number = parser(value, 10); return N
 
 function addPool(config, pool, logger, verbose) {
   if (!parsePoolAddress(pool)) {
-    if (logger) logger.err("Pool in invalid format '" + pool + "' is ignored, use <pool_address>:<pool_port> (or <pool_address>:ssl<pool_port>) format");
+    if (logger) logger.err(`Pool in invalid format '${  pool  }' is ignored, use <pool_address>:<pool_port> (or <pool_address>:ssl<pool_port>) format`);
     return false;
   }
   if (!config.pools.includes(pool)) config.pools.push(pool);
-  if (logger && verbose) logger.log("Added pool '" + pool + "' to the list of pools");
+  if (logger && verbose) logger.log(`Added pool '${  pool  }' to the list of pools`);
   return true;
 }
 
@@ -189,7 +189,7 @@ function parseOption(state, value) {
       return;
     }
   }
-  if (state.logger) state.logger.err("Ignoring unknown option '" + value + "'");
+  if (state.logger) state.logger.err(`Ignoring unknown option '${  value  }'`);
 }
 
 const OPTION_HANDLERS = [
@@ -239,14 +239,14 @@ function parseResult(state) {
 
 function applyPerfOption(config, algo, value, logger, verbose) {
   if (!isKnownPerfAlgo(algo)) {
-    if (logger) logger.err("Ignoring unknown algo " + algo + ". Please use one of these: " + BENCH_ALGOS.join(", "));
+    if (logger) logger.err(`Ignoring unknown algo ${  algo  }. Please use one of these: ${  BENCH_ALGOS.join(", ")}`);
     return false;
   }
   const hashrate = Number.parseFloat(value);
   if (!Number.isFinite(hashrate)) return false;
   const algos = expandAlgoPerf(config, algo, hashrate);
   if (logger && verbose) {
-    for (const depAlgo of algos) logger.log("Setting performance for " + depAlgo + " algo to " + config.algo_perf[depAlgo]);
+    for (const depAlgo of algos) logger.log(`Setting performance for ${  depAlgo  } algo to ${  config.algo_perf[depAlgo]}`);
   }
   return true;
 }

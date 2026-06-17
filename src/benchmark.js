@@ -26,7 +26,7 @@ function runBenchmarkRuns(options, callback) {
 }
 
 function runOneBenchmark(options, algo, resolve) {
-  options.logger.log("Checking miner performance for " + algo + " algo");
+  options.logger.log(`Checking miner performance for ${  algo  } algo`);
   const cmd = options.config.algos[algo];
   let minerProc = null;
   let completed = false;
@@ -36,7 +36,7 @@ function runOneBenchmark(options, algo, resolve) {
 
   const timeout = setTimeout(() => {
     if (completed) return;
-    options.logger.err("Can't find performance data in '" + cmd + "' miner output");
+    options.logger.err(`Can't find performance data in '${  cmd  }' miner output`);
     finish();
   }, options.timeoutMs || 5 * 60 * 1000);
 
@@ -79,7 +79,7 @@ function runOneBenchmark(options, algo, resolve) {
         finish();
         return false;
       }
-      options.logger.log("Read performance for " + algo + " algo to " + hashrate + ", waiting for " + (printsNeeded - printsFound) + " more print(s).");
+      options.logger.log(`Read performance for ${  algo  } algo to ${  hashrate  }, waiting for ${  printsNeeded - printsFound  } more print(s).`);
       return true;
     }, () => parserIndex);
   });
@@ -88,7 +88,7 @@ function runOneBenchmark(options, algo, resolve) {
 function setBenchmarkPerf(options, algo, hashrate) {
   const deps = benchAlgoDeps(algo, hashrate);
   for (const [depAlgo, depHashrate] of Object.entries(deps)) {
-    options.logger.log("Setting performance for " + depAlgo + " algo to " + depHashrate);
+    options.logger.log(`Setting performance for ${  depAlgo  } algo to ${  depHashrate}`);
     options.config.algo_perf[depAlgo] = depHashrate;
   }
 }

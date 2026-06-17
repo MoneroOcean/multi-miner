@@ -10,13 +10,13 @@ function setFirstMinerUserPass(config, json, logger, verbose) {
     if (json.method === "login" && "login" in json.params) config.user = json.params.login;
     if (json.method === "mining.authorize" && Array.isArray(json.params)) config.user = json.params[0];
     if (json.method === "eth_submitLogin" && Array.isArray(json.params)) config.user = json.params[0];
-    if (verbose && logger) logger.log("Setting pool user to '" + config.user + "'");
+    if (verbose && logger) logger.log(`Setting pool user to '${  config.user  }'`);
   }
   if (config.pass === null) {
     if (json.method === "login" && "pass" in json.params) config.pass = json.params.pass;
     if (json.method === "mining.authorize" && Array.isArray(json.params)) config.pass = json.params[1];
     if (json.method === "eth_submitLogin" && Array.isArray(json.params)) config.pass = json.params[1];
-    if (verbose && logger) logger.log("Setting pool pass to '" + config.pass + "'");
+    if (verbose && logger) logger.log(`Setting pool pass to '${  config.pass  }'`);
   }
 }
 
@@ -28,7 +28,7 @@ function checkMiners(options, callback) {
   }
 
   if (!options.flags.quiet && queue.length) {
-    options.logger.log("Checking miner configurations (make sure they are all configured to connect to " + options.config.miner_host + ":" + options.config.miner_port + " pool)");
+    options.logger.log(`Checking miner configurations (make sure they are all configured to connect to ${  options.config.miner_host  }:${  options.config.miner_port  } pool)`);
   }
 
   function next() {
@@ -47,7 +47,7 @@ function checkSmartMiner(options, cmd, resolve) {
     setFirstMinerUserPass(options.config, json, options.logger, options.flags.verbose);
     const algos = json.params && Array.isArray(json.params.algo) ? json.params.algo : [];
     if (algos.length === 0) {
-      options.logger.err("Miner '" + cmd + "' does not report any algo and will be ignored");
+      options.logger.err(`Miner '${  cmd  }' does not report any algo and will be ignored`);
       return;
     }
     for (const algo of algos) setAlgo(options, algo, cmd);
@@ -66,7 +66,7 @@ function runMinerCheck(options, cmd, onLogin, resolve) {
   let completed = false;
   const timeout = setTimeout(() => {
     if (completed) return;
-    options.logger.err("Miner '" + cmd + "' was not connected and will be ignored");
+    options.logger.err(`Miner '${  cmd  }' was not connected and will be ignored`);
     finish();
   }, options.timeoutMs || 60 * 1000);
 
@@ -99,8 +99,8 @@ function runMinerCheck(options, cmd, onLogin, resolve) {
 function setAlgo(options, algo, cmd) {
   if (options.flags.verbose) {
     const current = options.config.algos[algo];
-    if (current) options.logger.log("Setting " + algo + " algo from '" + current + "' to '" + cmd + "' miner");
-    else options.logger.log("Setting " + algo + " algo to '" + cmd + "' miner");
+    if (current) options.logger.log(`Setting ${  algo  } algo from '${  current  }' to '${  cmd  }' miner`);
+    else options.logger.log(`Setting ${  algo  } algo to '${  cmd  }' miner`);
   }
   assignAlgoCommand(options.config, algo, cmd);
 }

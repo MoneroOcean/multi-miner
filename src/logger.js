@@ -22,7 +22,7 @@ class Logger {
   }
 
   write(stream, prefix, message) {
-    const line = prefix + message + "\n";
+    const line = `${prefix + message  }\n`;
     stream.write(line);
     this.append(line);
   }

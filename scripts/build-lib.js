@@ -14,14 +14,14 @@ function pkgCommandAndArgs(args) {
     return { command: process.execPath, args: [bin].concat(args) };
   }
   const npx = process.platform === "win32" ? "npx.cmd" : "npx";
-  return { command: npx, args: ["--yes", "@yao-pkg/pkg@" + PKG_VERSION].concat(args), shell: process.platform === "win32" };
+  return { command: npx, args: ["--yes", `@yao-pkg/pkg@${  PKG_VERSION}`].concat(args), shell: process.platform === "win32" };
 }
 
 function runPkg(target, output) {
   fs.mkdirSync(path.dirname(output), { recursive: true });
   const pkg = pkgCommandAndArgs([".", "--public", "--no-bytecode", "--targets", target, "--output", output]);
   const result = childProcess.spawnSync(pkg.command, pkg.args, { stdio: "inherit", shell: pkg.shell || false });
-  if (result.error) process.stderr.write("Failed to start pkg: " + result.error.message + "\n");
+  if (result.error) process.stderr.write(`Failed to start pkg: ${  result.error.message  }\n`);
   if (result.status !== 0) process.exit(result.status || 1);
 }
 
@@ -30,8 +30,8 @@ function targetForCurrentPlatform() {
   const archMap = { x64: "x64", arm64: "arm64" };
   const platform = platformMap[process.platform];
   const arch = archMap[process.arch];
-  if (!platform || !arch) throw new Error("Unsupported platform for packaged build: " + process.platform + "/" + process.arch);
-  return RUNTIME + "-" + platform + "-" + arch;
+  if (!platform || !arch) throw new Error(`Unsupported platform for packaged build: ${  process.platform  }/${  process.arch}`);
+  return `${RUNTIME  }-${  platform  }-${  arch}`;
 }
 
 function binaryName(platform) {

@@ -11,7 +11,7 @@ function validateConfig(config) {
     errors.push("You must specify at least one pool");
   } else {
     config.pools.forEach((pool) => {
-      if (!parsePoolAddress(pool)) errors.push("Invalid pool address: " + pool);
+      if (!parsePoolAddress(pool)) errors.push(`Invalid pool address: ${  pool}`);
     });
   }
 
@@ -26,14 +26,14 @@ function validateConfig(config) {
   if (config.algo_perf && typeof config.algo_perf === "object") {
     for (const [algo, value] of Object.entries(config.algo_perf)) {
       if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
-        warnings.push("Ignoring suspicious performance value for " + algo + ": " + value);
+        warnings.push(`Ignoring suspicious performance value for ${  algo  }: ${  value}`);
       }
     }
   }
 
   const gpuConfigured = CURRENT_GPU_ALGOS.filter((algo) => config.algos && config.algos[algo]);
   if (gpuConfigured.length === 0) {
-    warnings.push("No current MoneroOcean GPU algorithms are configured: " + CURRENT_GPU_ALGOS.join(", "));
+    warnings.push(`No current MoneroOcean GPU algorithms are configured: ${  CURRENT_GPU_ALGOS.join(", ")}`);
   }
 
   return { errors, warnings };
@@ -42,8 +42,8 @@ function validateConfig(config) {
 function formatDiagnostics(config) {
   const result = validateConfig(config);
   const lines = ["Multi-Miner diagnostics"];
-  for (const warning of result.warnings) lines.push("warning: " + warning);
-  for (const error of result.errors) lines.push("error: " + error);
+  for (const warning of result.warnings) lines.push(`warning: ${  warning}`);
+  for (const error of result.errors) lines.push(`error: ${  error}`);
   if (result.errors.length === 0) lines.push("status: ok");
   return lines.join("\n");
 }

@@ -53,7 +53,7 @@ function connectPool(options) {
 
   let isPoolOk = false;
   const parser = createJsonLineParser((json) => {
-    if (options.debug && logger) logger.log("Pool message: " + JSON.stringify(json));
+    if (options.debug && logger) logger.log(`Pool message: ${  JSON.stringify(json)}`);
     if (!isPoolOk && (json.error === null || typeof json.error === "undefined")) {
       options.onOk(poolNum, socket);
       isPoolOk = true;
@@ -65,10 +65,10 @@ function connectPool(options) {
         options.onMessage(json);
       }
     } else if (logger) {
-      logger.err("Ignoring pool (" + poolLabel + ") message since pool has not confirmed login yet: " + JSON.stringify(json));
+      logger.err(`Ignoring pool (${  poolLabel  }) message since pool has not confirmed login yet: ${  JSON.stringify(json)}`);
     }
   }, (message) => {
-    if (logger) logger.err("Can't parse message from the pool (" + poolLabel + "): " + message);
+    if (logger) logger.err(`Can't parse message from the pool (${  poolLabel  }): ${  message}`);
   });
 
   socket.on("data", (msg) => parser.push(msg));
@@ -83,7 +83,7 @@ function connectPool(options) {
     if (notified) return;
     notified = true;
     socket.destroy();
-    if (logger) logger.err("Pool (" + poolLabel + ") " + reason);
+    if (logger) logger.err(`Pool (${  poolLabel  }) ${  reason}`);
     options.onError(poolNum);
   };
   socket.on("end", () => failover(isPoolOk ? "socket closed" : "socket closed before sending first job"));
@@ -93,7 +93,7 @@ function connectPool(options) {
 
 function writePoolSocket(socket, message, logger, debug) {
   const line = typeof message === "string" ? message : stringifyLine(message);
-  if (debug && logger) logger.log("Multi-Miner message to pool: " + line.trimEnd());
+  if (debug && logger) logger.log(`Multi-Miner message to pool: ${  line.trimEnd()}`);
   socket.write(line);
 }
 

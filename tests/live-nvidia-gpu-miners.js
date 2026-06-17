@@ -25,7 +25,7 @@ const MINERS = nvidiaMinerPlans(scriptCommand, WALLET);
 assertEasyEthTargets(MINERS);
 
 main().catch((error) => {
-  process.stderr.write((error && error.stack ? error.stack : String(error)) + "\n");
+  process.stderr.write(`${error && error.stack ? error.stack : String(error)  }\n`);
   process.exitCode = 1;
 });
 
@@ -69,7 +69,7 @@ async function runMiner(miner) {
 
   try {
     await app.run();
-    await withTimeout(pool.login, 15000, miner.name + " Multi-Miner did not login to fake pool");
+    await withTimeout(pool.login, 15000, `${miner.name  } Multi-Miner did not login to fake pool`);
     const outcome = await waitForOutcome(pool, miner, output);
     assertMinerProtocol(app, miner);
     const rates = extractHashrates(output.join("\n"), miner.algo).map((rate) => rate.hashrate);
@@ -100,13 +100,13 @@ async function waitForOutcome(pool, miner, output) {
     if (outcome && (!WAIT_HASHRATE || extractHashrates(output.join("\n"), miner.algo).length > 0)) return outcome;
     await delay(500);
   }
-  throw new Error("timed out; tail:\n" + tail(output.join("\n")));
+  throw new Error(`timed out; tail:\n${  tail(output.join("\n"))}`);
 }
 
 function assertMinerProtocol(app, miner) {
   const expected = expectedProtocol(miner);
   if (!expected) return;
-  assert.equal(app.minerServer.protocol, expected, "expected miner protocol " + expected + " but saw " + app.minerServer.protocol);
+  assert.equal(app.minerServer.protocol, expected, `expected miner protocol ${  expected  } but saw ${  app.minerServer.protocol}`);
 }
 
 function expectedProtocol(miner) {
@@ -121,9 +121,9 @@ function expectedProtocol(miner) {
 function scriptCommand(minerDir, command) {
   const dir = findMinerCommandDir(minerDir, command);
   if (!dir) return "";
-  const inner = "cd " + shellQuote(dir) + " && " + command;
-  if (fs.existsSync("/usr/bin/script")) return "/usr/bin/script -q -c " + quoteForCommand(inner) + " /dev/null";
-  return "/bin/sh -lc " + quoteForCommand(inner);
+  const inner = `cd ${  shellQuote(dir)  } && ${  command}`;
+  if (fs.existsSync("/usr/bin/script")) return `/usr/bin/script -q -c ${  quoteForCommand(inner)  } /dev/null`;
+  return `/bin/sh -lc ${  quoteForCommand(inner)}`;
 }
 
 function hasNvidiaGpu() {
@@ -132,13 +132,13 @@ function hasNvidiaGpu() {
 }
 
 function printResult(result) {
-  const suffix = result.status === "passed" ? " (" + result.outcome + ", protocol=" + result.protocol + ", rates=" + result.rates.length + ")" : result.reason;
-  process.stdout.write("live-nvidia-gpu-miners: " + result.name + " " + result.status + " " + suffix + "\n");
-  if (result.output) process.stdout.write(result.output + "\n");
+  const suffix = result.status === "passed" ? ` (${  result.outcome  }, protocol=${  result.protocol  }, rates=${  result.rates.length  })` : result.reason;
+  process.stdout.write(`live-nvidia-gpu-miners: ${  result.name  } ${  result.status  } ${  suffix  }\n`);
+  if (result.output) process.stdout.write(`${result.output  }\n`);
 }
 
 function writeCapture(name, output) {
   if (!CAPTURE_DIR) return;
   fs.mkdirSync(CAPTURE_DIR, { recursive: true });
-  fs.writeFileSync(path.join(CAPTURE_DIR, name + ".log"), output.join("\n") + "\n");
+  fs.writeFileSync(path.join(CAPTURE_DIR, `${name  }.log`), `${output.join("\n")  }\n`);
 }

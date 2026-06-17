@@ -16,12 +16,12 @@ describe("fake-pool integration", { concurrency: false }, () => {
     const app = new MultiMinerApp([
       "--no-config-save",
       "--watchdog=0",
-      "--pool=127.0.0.1:" + pool.port,
+      `--pool=127.0.0.1:${  pool.port}`,
       "--user=wallet",
       "--pass=x",
-      "--port=" + minerPort,
+      `--port=${  minerPort}`,
       "--perf_rx/0=1",
-      "--rx/0=" + fakeMinerCommand(minerPort, "default", "rx/0"),
+      `--rx/0=${  fakeMinerCommand(minerPort, "default", "rx/0")}`,
     ], appOptions());
 
     try {
@@ -43,12 +43,12 @@ describe("fake-pool integration", { concurrency: false }, () => {
     const app = new MultiMinerApp([
       "--no-config-save",
       "--watchdog=0",
-      "--pool=127.0.0.1:" + pool.port,
+      `--pool=127.0.0.1:${  pool.port}`,
       "--user=wallet",
       "--pass=x",
-      "--port=" + minerPort,
+      `--port=${  minerPort}`,
       "--perf_etchash=1",
-      "--etchash=" + fakeMinerCommand(minerPort, "eth", "etchash"),
+      `--etchash=${  fakeMinerCommand(minerPort, "eth", "etchash")}`,
     ], appOptions());
 
     try {
@@ -68,12 +68,12 @@ describe("fake-pool integration", { concurrency: false }, () => {
     const app = new MultiMinerApp([
       "--no-config-save",
       "--watchdog=0",
-      "--pool=127.0.0.1:" + pool.port,
+      `--pool=127.0.0.1:${  pool.port}`,
       "--user=wallet",
       "--pass=x",
-      "--port=" + minerPort,
+      `--port=${  minerPort}`,
       "--perf_etchash=1",
-      "--etchash=" + fakeMinerCommand(minerPort, "ethproxy", "etchash"),
+      `--etchash=${  fakeMinerCommand(minerPort, "ethproxy", "etchash")}`,
     ], appOptions());
 
     try {

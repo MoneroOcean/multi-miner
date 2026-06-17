@@ -99,12 +99,12 @@ function difficultyTarget(value) {
   const scaledDifficulty = BigInt(Math.max(1, Math.floor(difficulty * Number(scale))));
   const max = (1n << 256n) - 1n;
   const target = ((1n << 256n) * scale) / scaledDifficulty;
-  return "0x" + (target > max ? max : target).toString(16).padStart(64, "0");
+  return `0x${  (target > max ? max : target).toString(16).padStart(64, "0")}`;
 }
 
 function hex(value) {
   if (typeof value !== "string" || value.length === 0) return "0x0";
-  return value.startsWith("0x") ? value : "0x" + value;
+  return value.startsWith("0x") ? value : `0x${  value}`;
 }
 
 function normalizeHex(value) {

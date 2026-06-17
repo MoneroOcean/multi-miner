@@ -26,7 +26,7 @@ class SpacedSpecReporter extends Transform {
       let line = this.pendingText.slice(0, newlineIndex + 1);
       this.pendingText = this.pendingText.slice(newlineIndex + 1);
       const isSuiteLine = /^\s*▶ /.test(line);
-      if (isSuiteLine && this.lastPrintedNonEmptyLine && !this.lastPrintedBlankLine) line = "\n" + line;
+      if (isSuiteLine && this.lastPrintedNonEmptyLine && !this.lastPrintedBlankLine) line = `\n${  line}`;
       if (line.trim()) {
         this.lastPrintedBlankLine = false;
         this.lastPrintedNonEmptyLine = line.trimEnd();
@@ -49,7 +49,7 @@ class SpacedSpecReporter extends Transform {
     this.reporter.once("end", () => {
       if (this.pendingText) {
         let output = this.pendingText;
-        if (/^\s*▶ /.test(output) && this.lastPrintedNonEmptyLine && !this.lastPrintedBlankLine) output = "\n" + output;
+        if (/^\s*▶ /.test(output) && this.lastPrintedNonEmptyLine && !this.lastPrintedBlankLine) output = `\n${  output}`;
         this.push(output);
         this.pendingText = "";
       }

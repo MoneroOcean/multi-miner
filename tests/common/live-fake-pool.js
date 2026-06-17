@@ -84,7 +84,7 @@ function assertEasyEthTargets(cases) {
 }
 
 function targetDifficulty(targetHex) {
-  const target = BigInt("0x" + String(targetHex).replace(/^0x/i, ""));
+  const target = BigInt(`0x${  String(targetHex).replace(/^0x/i, "")}`);
   return target > 0n ? Number(((1n << 256n) - 1n) / target) : Infinity;
 }
 

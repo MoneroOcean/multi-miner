@@ -5,7 +5,7 @@ const path = require("path");
 const { words } = require("../common/live-helpers");
 
 function nvidiaMinerPlans(scriptCommand, wallet) {
-  const srb = (command) => scriptCommand("srbminer-multi", "./SRBMiner-MULTI " + command + " --retry-time 1 --job-timeout 0 --gpu-sensors-disable --disable-worker-watchdog");
+  const srb = (command) => scriptCommand("srbminer-multi", `./SRBMiner-MULTI ${  command  } --retry-time 1 --job-timeout 0 --gpu-sensors-disable --disable-worker-watchdog`);
   const stableGpuArgs = "--gpu-intensity 1 --gpu-disable-interleaving --disable-gpu-dual-kernels --autotune-no-load --busy-wait-recheck 0.01 --extended-log";
   const gpuFlags = "--disable-cpu --disable-gpu-amd --disable-gpu-intel --gpu-id 0";
   return [
@@ -93,14 +93,14 @@ function nvidiaMinerPlans(scriptCommand, wallet) {
       command: (port) => scriptCommand("lolminer", `./lolMiner --algo CR29 --pool 127.0.0.1:${port} --user ${wallet} --pass x --nocolor`),
     },
     ...["autolykos2", "etchash", "kawpow"].map((algo) => ({
-      name: "gminer-" + algo,
+      name: `gminer-${  algo}`,
       algo,
       binary: "gminer/miner",
       kind: "eth",
       command: (port) => scriptCommand("gminer", `./miner --algo ${algo} --server 127.0.0.1 --port ${port} --user ${wallet} --pass x --proto stratum`),
     })),
     ...["autolykos2", "etchash", "kawpow"].map((algo) => ({
-      name: "rigel-" + algo,
+      name: `rigel-${  algo}`,
       algo,
       binary: "rigel/rigel",
       kind: "eth",
@@ -139,7 +139,7 @@ function xmrigCudaConfig(loader) {
 }
 
 function quote(value) {
-  return "'" + String(value).replace(/'/g, "'\\''") + "'";
+  return `'${  String(value).replace(/'/g, "'\\''")  }'`;
 }
 
 module.exports = { nvidiaMinerPlans };

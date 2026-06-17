@@ -44,28 +44,28 @@ const CASE_LABELS = {
 const colorsEnabled = shouldUseColor();
 
 main().catch((error) => {
-  process.stderr.write((error && error.stack ? error.stack : String(error)) + "\n");
+  process.stderr.write(`${error && error.stack ? error.stack : String(error)  }\n`);
   process.exitCode = 1;
 });
 
 async function main() {
   const started = Date.now();
   const results = [];
-  process.stdout.write(color("bold", "▶ live") + "\n");
+  process.stdout.write(`${color("bold", "▶ live")  }\n`);
 
   for (const target of targets) {
     results.push(await runTarget(target));
   }
 
-  process.stdout.write(color("green", "✔") + " live " + color("gray", "(" + formatDuration(Date.now() - started) + ")") + "\n");
+  process.stdout.write(`${color("green", "✔")  } live ${  color("gray", `(${  formatDuration(Date.now() - started)  })`)  }\n`);
 
   const failures = results.filter((result) => result.error || result.status !== 0);
   if (failures.length === 0) return;
 
   process.stdout.write("\nFailed live test logs:\n");
   for (const failure of failures) {
-    process.stdout.write("\n--- " + failure.name + " ---\n");
-    if (failure.error) process.stdout.write(String(failure.error.stack || failure.error) + "\n");
+    process.stdout.write(`\n--- ${  failure.name  } ---\n`);
+    if (failure.error) process.stdout.write(`${String(failure.error.stack || failure.error)  }\n`);
     process.stdout.write(failure.output || "(no output)\n");
   }
   process.exit(1);
@@ -79,7 +79,7 @@ function runTarget(target) {
     const cases = [];
     let spawnError = null;
 
-    process.stdout.write("\n  " + color("bold", "▶ " + target.name) + "\n");
+    process.stdout.write(`\n  ${  color("bold", `▶ ${  target.name}`)  }\n`);
     const child = childProcess.spawn(process.execPath, [path.join("tests", target.script)], {
       env: process.env,
       stdio: ["ignore", "pipe", "pipe"],
@@ -97,10 +97,10 @@ function runTarget(target) {
       spawnError = error;
     });
     child.on("close", (status) => {
-      stdoutBuffer = processStdoutLines(stdoutBuffer + "\n", cases);
+      stdoutBuffer = processStdoutLines(`${stdoutBuffer  }\n`, cases);
       if (cases.length === 0) printCase({ name: "startup", status: status === 0 && !spawnError ? "passed" : "failed", detail: "" });
       const failed = spawnError || status !== 0;
-      process.stdout.write("  " + statusIcon(failed ? "failed" : "passed") + " " + target.name + " " + color("gray", "(" + formatDuration(Date.now() - started) + ")") + "\n");
+      process.stdout.write(`  ${  statusIcon(failed ? "failed" : "passed")  } ${  target.name  } ${  color("gray", `(${  formatDuration(Date.now() - started)  })`)  }\n`);
       resolve({ cases, durationMs: Date.now() - started, error: spawnError, name: target.name, output, status });
     });
   });
@@ -127,8 +127,8 @@ function parseLine(line) {
 }
 
 function printCase(testCase) {
-  const line = "    " + statusIcon(testCase.status) + " " + testCase.name + detailText(testCase);
-  process.stdout.write((testCase.status === "skipped" ? color("gray", line) : line) + "\n");
+  const line = `    ${  statusIcon(testCase.status)  } ${  testCase.name  }${detailText(testCase)}`;
+  process.stdout.write(`${testCase.status === "skipped" ? color("gray", line) : line  }\n`);
 }
 
 function statusIcon(status) {
@@ -139,8 +139,8 @@ function statusIcon(status) {
 
 function detailText(testCase) {
   if (!testCase.detail) return "";
-  if (testCase.status === "skipped") return " # SKIP " + testCase.detail;
-  return " " + color("gray", testCase.detail);
+  if (testCase.status === "skipped") return ` # SKIP ${  testCase.detail}`;
+  return ` ${  color("gray", testCase.detail)}`;
 }
 
 function displayCaseName(name) {
@@ -151,7 +151,7 @@ function displayCaseName(name) {
     .replace(/-/g, " ");
 }
 
-function formatDuration(ms) { return ms < 1000 ? ms.toFixed(0) + "ms" : (ms / 1000).toFixed(1) + "s"; }
+function formatDuration(ms) { return ms < 1000 ? `${ms.toFixed(0)  }ms` : `${(ms / 1000).toFixed(1)  }s`; }
 
 function shouldUseColor() {
   if (process.env.FORCE_COLOR && process.env.FORCE_COLOR !== "0") return true;
@@ -167,5 +167,5 @@ function color(name, text) {
     green: [32, 39],
     red: [31, 39],
   };
-  return "\u001b[" + codes[name][0] + "m" + text + "\u001b[" + codes[name][1] + "m";
+  return `\u001b[${  codes[name][0]  }m${  text  }\u001b[${  codes[name][1]  }m`;
 }

@@ -1,7 +1,7 @@
 "use strict";
 
 function stringifyLine(value) {
-  return JSON.stringify(value) + "\n";
+  return `${JSON.stringify(value)  }\n`;
 }
 
 function createJsonLineParser(onJson, onInvalid) {

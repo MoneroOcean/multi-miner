@@ -15,7 +15,7 @@ const { startMiner, treeKill } = require("./src/process-manager");
 const { stringifyLine } = require("./src/json-lines");
 
 const VERSION = "v5.0";
-const AGENT = "Multi-Miner " + VERSION;
+const AGENT = `Multi-Miner ${  VERSION}`;
 
 class MultiMinerApp {
   constructor(argv, options) {
@@ -55,7 +55,7 @@ class MultiMinerApp {
   }
 
   async run() {
-    this.logger.log("Multi-Miner " + VERSION);
+    this.logger.log(`Multi-Miner ${  VERSION}`);
     const parsed = parseArgs(this.argv, {
       config: this.config,
       flags: this.flags,
@@ -73,7 +73,7 @@ class MultiMinerApp {
       return 1;
     }
     if (this.flags.diagnostics) {
-      process.stdout.write(formatDiagnostics(this.config) + "\n");
+      process.stdout.write(`${formatDiagnostics(this.config)  }\n`);
       return validateConfig(this.config).errors.length ? 1 : 0;
     }
 
@@ -81,7 +81,7 @@ class MultiMinerApp {
     if (!this.options.skipMinerCheck) await this.checkMiners(parsed);
     const diagnostics = validateConfig(this.config);
     if (diagnostics.errors.length) {
-      for (const error of diagnostics.errors) this.logger.err("[FATAL] " + error);
+      for (const error of diagnostics.errors) this.logger.err(`[FATAL] ${  error}`);
       await this.closeServer();
       return 1;
     }
@@ -95,7 +95,7 @@ class MultiMinerApp {
       this.minerServer.listen(() => {
         this.minerServer.server.removeListener("error", reject);
         if (this.flags.verbose) {
-          this.logger.log("Local miner server on " + this.config.miner_host + ":" + this.config.miner_port + " port started");
+          this.logger.log(`Local miner server on ${  this.config.miner_host  }:${  this.config.miner_port  } port started`);
         }
         resolve();
       });
@@ -132,7 +132,7 @@ class MultiMinerApp {
 
   main() {
     this.printParams();
-    this.logger.log("POOL USER: '" + this.config.user + "', PASS: '" + this.config.pass + "'");
+    this.logger.log(`POOL USER: '${  this.config.user  }', PASS: '${  this.config.pass  }'`);
     this.setRuntimeMinerHandlers();
     this.startWatchdogs();
     this.connectPool(0);
@@ -159,7 +159,7 @@ class MultiMinerApp {
       this.logger.log("SETUP COMPLETE");
       this.logger.log(body);
       this.logger.log("");
-      this.logger.log("Saving " + this.configFile + " config file");
+      this.logger.log(`Saving ${  this.configFile  } config file`);
     }
     if (!this.flags.noConfigSave) saveConfigFile(this.configFile, this.config, this.logger);
   }
@@ -174,7 +174,7 @@ class MultiMinerApp {
   }
   handleMinerLogin(json, socket) {
     if (this.currPoolSocket && !this.minerServer.socket) {
-      this.logger.log("Pool (" + this.poolLabel() + ") <-> miner link was established due to new miner connection");
+      this.logger.log(`Pool (${  this.poolLabel()  }) <-> miner link was established due to new miner connection`);
     }
     const protocol = detectMinerProtocol(json);
     this.minerServer.setCurrent(socket, protocol);
@@ -184,7 +184,7 @@ class MultiMinerApp {
   }
   sendFirstJob(json, socket) {
     if (!this.currPoolLastJob) {
-      this.logger.err("No pool (" + this.poolLabel() + ") job to send to the miner!");
+      this.logger.err(`No pool (${  this.poolLabel()  }) job to send to the miner!`);
       return;
     }
     if (this.minerServer.protocol === "grin") {
@@ -223,7 +223,7 @@ class MultiMinerApp {
       this.writePool(json);
       return;
     }
-    this.logger.err("No active pool (" + this.poolLabel() + ") to send subscribe job to the miner!");
+    this.logger.err(`No active pool (${  this.poolLabel()  }) to send subscribe job to the miner!`);
     this.minerServer.write(socket, jsonError(json, "No active Multi-Miner pool"));
   }
   handleMinerExtranonceSubscribe(json, socket) { this.minerServer.write(socket, jsonReply(json, true)); if (this.minerServer.protocol === "eth") this.flushPendingEthFirstJob(); }
@@ -264,12 +264,12 @@ class MultiMinerApp {
       this.mainPoolCheckTimer = null;
     }
     if (this.currPoolSocket) {
-      if (this.flags.verbose) this.logger.log("Closing " + this.poolLabel() + " pool socket");
+      if (this.flags.verbose) this.logger.log(`Closing ${  this.poolLabel()  } pool socket`);
       this.currPoolSocket.destroy();
     }
-    if (!this.flags.quiet) this.logger.log("Connected to " + this.config.pools[poolNum] + " pool");
+    if (!this.flags.quiet) this.logger.log(`Connected to ${  this.config.pools[poolNum]  } pool`);
     if (!this.currPoolSocket && this.minerServer.socket) {
-      this.logger.log("Pool (" + this.config.pools[poolNum] + ") <-> miner link was established due to new pool connection");
+      this.logger.log(`Pool (${  this.config.pools[poolNum]  }) <-> miner link was established due to new pool connection`);
     }
     this.currPoolNum = poolNum;
     this.currPoolSocket = poolSocket;
@@ -323,7 +323,7 @@ class MultiMinerApp {
 
   switchAlgo(nextJobAlgo) {
     if (!(nextJobAlgo in this.config.algos)) {
-      this.logger.err("Ignoring job with unknown algo " + nextJobAlgo + " sent by the pool (" + this.poolLabel() + ")");
+      this.logger.err(`Ignoring job with unknown algo ${  nextJobAlgo  } sent by the pool (${  this.poolLabel()  })`);
       return false;
     }
     if (this.currAlgo !== nextJobAlgo) this.lastAlgoChangeTime = Date.now();
@@ -331,7 +331,7 @@ class MultiMinerApp {
     const nextMiner = this.config.algos[nextJobAlgo];
     if (!this.currMiner || this.currMiner !== nextMiner) {
       this.minerServer.setCurrent(null);
-      if (!this.flags.quiet) this.logger.log("Starting miner '" + nextMiner + "' to process new " + nextJobAlgo + " algo");
+      if (!this.flags.quiet) this.logger.log(`Starting miner '${  nextMiner  }' to process new ${  nextJobAlgo  } algo`);
       this.currMiner = nextMiner;
       this.replaceMiner(nextMiner);
     }
@@ -354,7 +354,7 @@ class MultiMinerApp {
       return;
     }
     if (this.currPoolNum !== poolNum) this.logger.err("[INTERNAL ERROR] Unexpected pool_num in pool_err");
-    if (this.currPoolSocket && this.minerServer.socket) this.logger.err("Pool (" + this.poolLabel() + ") <-> miner link was broken due to pool socket error");
+    if (this.currPoolSocket && this.minerServer.socket) this.logger.err(`Pool (${  this.poolLabel()  }) <-> miner link was broken due to pool socket error`);
     this.currPoolSocket = null;
     this.currPoolLastJob = null;
     this.currPoolMinerId = null;
@@ -384,7 +384,7 @@ class MultiMinerApp {
     }
     if (this.nextMinerToRun === null) {
       this.nextMinerToRun = nextMiner;
-      if (this.flags.verbose) this.logger.log("Stopping '" + this.currMiner + "' miner");
+      if (this.flags.verbose) this.logger.log(`Stopping '${  this.currMiner  }' miner`);
       this.minerProc.once("close", () => {
         const command = this.nextMinerToRun;
         this.nextMinerToRun = null;
@@ -410,7 +410,7 @@ class MultiMinerApp {
         verbose: this.flags.verbose,
       });
     } catch (error) {
-      this.logger.err("Failed to parse miner command '" + cmd + "': " + error.message);
+      this.logger.err(`Failed to parse miner command '${  cmd  }': ${  error.message}`);
       return null;
     }
     proc.on("close", (code) => this.handleMinerProcessClose(cmd, code, outCb));
@@ -419,11 +419,11 @@ class MultiMinerApp {
 
   handleMinerProcessClose(cmd, code, outCb) {
     if (this.flags.verbose) {
-      if (code) this.logger.err("Miner '" + cmd + "' exited with nonzero code " + code);
-      else this.logger.log("Miner '" + cmd + "' exited with zero code");
+      if (code) this.logger.err(`Miner '${  cmd  }' exited with nonzero code ${  code}`);
+      else this.logger.log(`Miner '${  cmd  }' exited with zero code`);
     }
     if (this.currPoolSocket && !this.isWantMinerKill) {
-      this.logger.log("Restarting '" + cmd + "' miner that was closed unexpectedly");
+      this.logger.log(`Restarting '${  cmd  }' miner that was closed unexpectedly`);
       this.minerProc = this.startMinerProcess(cmd, outCb);
     }
   }
@@ -434,13 +434,13 @@ class MultiMinerApp {
   }
 
   startSubmitWatchdog() {
-    if (this.flags.verbose) this.logger.log("Starting miner watchdog timer (with " + this.config.watchdog + " seconds max since last miner result)");
+    if (this.flags.verbose) this.logger.log(`Starting miner watchdog timer (with ${  this.config.watchdog  } seconds max since last miner result)`);
     const timer = setInterval(() => {
       if (this.currPoolSocket) this.writePool({ jsonrpc: "2.0", id: "mm", method: "keepalived", params: {} });
       if (!this.currPoolSocket || !this.minerServer.socket || this.minerLastSubmitTime === null) return;
       const idleTime = (Date.now() - this.minerLastSubmitTime) / 1000;
       if (idleTime > this.config.watchdog) {
-        this.logger.err("No results from miner for more than " + this.config.watchdog + " seconds. Restarting it...");
+        this.logger.err(`No results from miner for more than ${  this.config.watchdog  } seconds. Restarting it...`);
         this.minerLastSubmitTime = Date.now();
         this.replaceMiner(this.currMiner);
       }
@@ -449,13 +449,13 @@ class MultiMinerApp {
   }
 
   startHashrateWatchdog() {
-    if (this.flags.verbose) this.logger.log("Starting miner hashrate watchdog timer (with " + this.config.hashrate_watchdog + "% min hashrate threshold)");
+    if (this.flags.verbose) this.logger.log(`Starting miner hashrate watchdog timer (with ${  this.config.hashrate_watchdog  }% min hashrate threshold)`);
     const timer = setInterval(() => {
       if (!this.currPoolSocket || !this.minerServer.socket || this.lastMinerHashrate === null) return;
       if (this.lastAlgoChangeTime && Date.now() - this.lastAlgoChangeTime < 15 * 60 * 1000) return;
       const minHashrate = localAlgoPerf(this.config, this.currAlgo) * this.config.hashrate_watchdog / 100;
       if (this.lastMinerHashrate < minHashrate) {
-        this.logger.err("Current miner hashrate " + this.lastMinerHashrate + " is below minimum " + minHashrate + " hashrate threshold. Restarting it...");
+        this.logger.err(`Current miner hashrate ${  this.lastMinerHashrate  } is below minimum ${  minHashrate  } hashrate threshold. Restarting it...`);
         this.replaceMiner(this.currMiner);
       }
     }, this.options.watchdogIntervalMs || 60 * 1000);
@@ -493,7 +493,7 @@ module.exports = {
 if (require.main === module) {
   runCli(process.argv).catch((error) => {
     const message = error && error.stack ? error.stack : String(error);
-    process.stderr.write("!!! " + message + "\n");
+    process.stderr.write(`!!! ${  message  }\n`);
     process.exitCode = 1;
   });
 }

@@ -33,7 +33,7 @@ const GPU_CASES = [
 ];
 assertEasyEthTargets(GPU_CASES);
 main().catch((error) => {
-  process.stderr.write((error && error.stack ? error.stack : String(error)) + "\n");
+  process.stderr.write(`${error && error.stack ? error.stack : String(error)  }\n`);
   process.exitCode = 1;
 });
 
@@ -48,7 +48,7 @@ async function main() {
 
   for (const testCase of selectedCases(GPU_CASES, "MM_LIVE_INTEL_GPU_CASES")) {
     const result = !binaries[testCase.miner]
-      ? { name: testCase.name, status: "skipped", reason: testCase.miner + " binary not found" }
+      ? { name: testCase.name, status: "skipped", reason: `${testCase.miner  } binary not found` }
       : !hasIntelGpu
         ? { name: testCase.name, status: "skipped", reason: "Intel OpenCL GPU not found" }
         : await runCase(binaries[testCase.miner], testCase);
@@ -75,15 +75,15 @@ async function runCase(binary, testCase) {
   captureOutput(app, output);
 
   try {
-    await withTimeout(app.run(), testCase.miner === "mom" ? 75000 : 15000, testCase.name + " Multi-Miner did not start");
-    const login = await withTimeout(pool.login, 15000, testCase.name + " Multi-Miner did not log in to fake pool");
+    await withTimeout(app.run(), testCase.miner === "mom" ? 75000 : 15000, `${testCase.name  } Multi-Miner did not start`);
+    const login = await withTimeout(pool.login, 15000, `${testCase.name  } Multi-Miner did not log in to fake pool`);
     assert.equal(login.method, "login");
     assert.ok(login.params.algo.includes(testCase.algo));
     const outcome = await waitForOutcome(pool, testCase, output);
     return { name: testCase.name, status: "passed", outcome };
   } catch (error) {
     const text = output.join("\n");
-    if (isUnsupportedOutput(text)) return { name: testCase.name, status: "skipped", reason: "unsupported by this " + testCase.miner + " build or device" };
+    if (isUnsupportedOutput(text)) return { name: testCase.name, status: "skipped", reason: `unsupported by this ${  testCase.miner  } build or device` };
     return { name: testCase.name, status: "failed", reason: error.message, output: tail(text) };
   } finally {
     await app.stop();
@@ -119,16 +119,16 @@ function hasIntelOpenClGpu() {
 
 function srbMinerCommand(binary, testCase, minerPort) {
   const dir = path.dirname(binary);
-  const exe = "./" + path.basename(binary);
+  const exe = `./${  path.basename(binary)}`;
   const stableGpuArgs = testCase.algo === "cn/gpu" || testCase.algo === "autolykos2"
     ? "--gpu-intensity 1 --gpu-disable-interleaving --disable-gpu-dual-kernels --autotune-no-load --busy-wait-recheck 0.01 --extended-log"
     : "";
   const inner = [
-    "cd " + shellQuote(dir),
+    `cd ${  shellQuote(dir)}`,
     "&&",
     shellQuote(exe),
-    "--algorithm " + shellQuote(testCase.minerAlgo),
-    "--pool 127.0.0.1:" + minerPort,
+    `--algorithm ${  shellQuote(testCase.minerAlgo)}`,
+    `--pool 127.0.0.1:${  minerPort}`,
     "--wallet wallet",
     "--password x",
     testCase.extraArgs || "",
@@ -139,8 +139,8 @@ function srbMinerCommand(binary, testCase, minerPort) {
     "--disable-worker-watchdog",
     stableGpuArgs,
   ].join(" ");
-  if (fs.existsSync("/usr/bin/script")) return "/usr/bin/script -q -c " + quoteForCommand(inner) + " /dev/null";
-  return "/bin/sh -lc " + quoteForCommand(inner);
+  if (fs.existsSync("/usr/bin/script")) return `/usr/bin/script -q -c ${  quoteForCommand(inner)  } /dev/null`;
+  return `/bin/sh -lc ${  quoteForCommand(inner)}`;
 }
 
 function moMinerCommand(binary, testCase, minerPort, tmpDir) {
@@ -150,15 +150,15 @@ function moMinerCommand(binary, testCase, minerPort, tmpDir) {
   if (process.platform === "win32") return [quoteForCommand(binary), "mine", quoteForCommand(configPath)].join(" ");
   const libPath = [rootDir, path.join(rootDir, "lib"), path.join(rootDir, "lib64"), process.env.LD_LIBRARY_PATH || ""].filter(Boolean).join(":");
   const inner = [
-    "cd " + shellQuote(rootDir),
+    `cd ${  shellQuote(rootDir)}`,
     "&&",
-    "MOM_CONFIG_DIR=" + shellQuote(tmpDir),
-    "LD_LIBRARY_PATH=" + shellQuote(libPath),
+    `MOM_CONFIG_DIR=${  shellQuote(tmpDir)}`,
+    `LD_LIBRARY_PATH=${  shellQuote(libPath)}`,
     shellQuote(binary),
     "mine",
     shellQuote(configPath),
   ].join(" ");
-  return "/bin/sh -lc " + quoteForCommand(inner);
+  return `/bin/sh -lc ${  quoteForCommand(inner)}`;
 }
 
 function moMinerConfig(testCase, minerPort) {

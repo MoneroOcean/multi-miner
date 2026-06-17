@@ -39,20 +39,20 @@ class MinerServer {
 
   write(socket, message) {
     const line = typeof message === "string" ? message : stringifyLine(message);
-    if (this.flags.debug) this.logger.log("Multi-Miner message to miner: " + line.trimEnd());
+    if (this.flags.debug) this.logger.log(`Multi-Miner message to miner: ${  line.trimEnd()}`);
     socket.write(line);
   }
 
   handleConnection(minerSocket) {
     if (this.socket) {
-      this.logger.err("Miner server on " + this.config.miner_host + ":" + this.config.miner_port + " port is already connected (please make sure you do not have other miner running)");
+      this.logger.err(`Miner server on ${  this.config.miner_host  }:${  this.config.miner_port  } port is already connected (please make sure you do not have other miner running)`);
       minerSocket.end();
       return;
     }
-    if (this.flags.verbose) this.logger.log("Miner server on " + this.config.miner_host + ":" + this.config.miner_port + " port connected from " + minerSocket.remoteAddress);
+    if (this.flags.verbose) this.logger.log(`Miner server on ${  this.config.miner_host  }:${  this.config.miner_port  } port connected from ${  minerSocket.remoteAddress}`);
 
     const parser = createJsonLineParser((json) => this.handleMessage(json, minerSocket), (message) => {
-      this.logger.err("Can't parse message from the miner: " + message);
+      this.logger.err(`Can't parse message from the miner: ${  message}`);
     });
 
     minerSocket.on("data", (msg) => parser.push(msg));
@@ -65,7 +65,7 @@ class MinerServer {
   }
 
   handleMessage(json, minerSocket) {
-    if (this.flags.debug) this.logger.log("Miner message: " + JSON.stringify(json));
+    if (this.flags.debug) this.logger.log(`Miner message: ${  JSON.stringify(json)}`);
     if (json.method === "login") {
       this.handleLogin(json, minerSocket);
     } else if (json.method === "mining.authorize") {
@@ -115,9 +115,9 @@ class MinerServer {
   }
 
   handleClose(reason) {
-    if (this.flags.verbose) this.logger.log("Miner socket was " + reason);
+    if (this.flags.verbose) this.logger.log(`Miner socket was ${  reason}`);
     if (this.getPoolSocket() && this.socket) {
-      this.logger.err("Pool (" + this.getPoolLabel() + ") <-> miner link was broken due to " + reason + " miner socket");
+      this.logger.err(`Pool (${  this.getPoolLabel()  }) <-> miner link was broken due to ${  reason  } miner socket`);
     }
     this.setCurrent(null);
   }

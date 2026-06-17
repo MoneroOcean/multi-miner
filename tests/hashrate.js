@@ -28,7 +28,7 @@ describe("hashrate extraction", () => {
   ];
 
   for (const [name, line, algo, expected] of fixtures) {
-    it("parses " + name, () => {
+    it(`parses ${  name}`, () => {
       const rates = extractHashrates(line, algo);
       assert.ok(rates.some((rate) => nearlyEqual(rate.hashrate, expected)));
     });

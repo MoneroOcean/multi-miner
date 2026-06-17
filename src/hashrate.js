@@ -64,7 +64,7 @@ function stripAnsi(str) {
 
 function normalizeUnit(unit) {
   const normalized = String(unit || "h/s").toLowerCase().replace(/\s+/g, "");
-  if (/^[kmgt]h$/.test(normalized)) return normalized + "/s";
+  if (/^[kmgt]h$/.test(normalized)) return `${normalized  }/s`;
   return normalized;
 }
 
@@ -73,7 +73,7 @@ function unitFactor(unit) {
 }
 
 function globalRegex(regex) {
-  const flags = regex.flags.includes("g") ? regex.flags : regex.flags + "g";
+  const flags = regex.flags.includes("g") ? regex.flags : `${regex.flags  }g`;
   return new RegExp(regex.source, flags);
 }
 
