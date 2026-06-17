@@ -12,9 +12,7 @@ module.exports = [
       globals: { ...globals.node }
     },
     rules: {
-      "no-unused-vars": ["error", { args: "after-used", argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrors: "all", caughtErrorsIgnorePattern: "^_" }],
-      // ANSI escape stripping requires the \x1b control char in a regex (src/hashrate.js); intentional.
-      "no-control-regex": "off"
+      "no-unused-vars": ["error", { args: "after-used", argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrors: "all", caughtErrorsIgnorePattern: "^_" }]
     }
   }
 ];

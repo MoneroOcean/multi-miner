@@ -58,6 +58,7 @@ function unitParser(name, stabilization, regex, valueGroup, unitGroup) {
 }
 
 function stripAnsi(str) {
+  // eslint-disable-next-line no-control-regex -- intentional ANSI escape (\x1b) for stripping terminal color codes
   return String(str).replace(/\x1b\[[0-9;]*m/g, "");
 }
 
