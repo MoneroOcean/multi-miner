@@ -72,20 +72,22 @@ function connectPool(options) {
   });
 
   socket.on("data", (msg) => parser.push(msg));
-  socket.on("end", () => {
+  let notified = false;
+  // Drive failover/reconnect exactly once when the pool connection ends. The "end" path previously
+  // only acted before login; a graceful post-login FIN (pool restart/maintenance/idle) merely logged,
+  // so mm.js was never told, the dead socket stayed as currPoolSocket, and the miner was silently
+  // orphaned (no jobs, no reconnect). Route "end" and "error" through one guard so they cannot
+  // double-fire. Deliberately NOT "close": it also fires on mm.js's own destroy during a pool switch,
+  // which must not trigger failover.
+  const failover = (reason) => {
+    if (notified) return;
+    notified = true;
     socket.destroy();
-    if (!isPoolOk) {
-      if (logger) logger.err("Pool (" + poolLabel + ") socket closed before sending first job");
-      options.onError(poolNum);
-    } else if (options.verbose && logger) {
-      logger.log("Pool (" + poolLabel + ") socket closed");
-    }
-  });
-  socket.on("error", () => {
-    if (logger) logger.err("Pool (" + poolLabel + ") socket error");
-    socket.destroy();
+    if (logger) logger.err("Pool (" + poolLabel + ") " + reason);
     options.onError(poolNum);
-  });
+  };
+  socket.on("end", () => failover(isPoolOk ? "socket closed" : "socket closed before sending first job"));
+  socket.on("error", () => failover("socket error"));
   return socket;
 }
 
