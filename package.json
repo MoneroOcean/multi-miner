@@ -12,6 +12,7 @@
     "npm": ">=11.10.0"
   },
   "scripts": {
+    "pretest": "npm run lint",
     "test": "node --require ./tests/common/test_output_buffer.js --test --test-reporter=./tests/common/spec-reporter.js tests/all.js",
     "test:live": "node scripts/run-live-tests.js",
     "test:live:cpu": "node tests/live-cpu-miners.js",
