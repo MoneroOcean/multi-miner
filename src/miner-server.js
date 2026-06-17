@@ -46,6 +46,10 @@ class MinerServer {
   handleConnection(minerSocket) {
     if (this.socket) {
       this.logger.err(`Miner server on ${  this.config.miner_host  }:${  this.config.miner_port  } port is already connected (please make sure you do not have other miner running)`);
+      // The rejected socket still needs an 'error' listener: without one, a socket
+      // error after end() (e.g. the peer sends RST) is rethrown by EventEmitter as
+      // an uncaught exception and crashes the whole miner process.
+      minerSocket.on("error", () => minerSocket.destroy());
       minerSocket.end();
       return;
     }
