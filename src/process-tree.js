@@ -43,8 +43,13 @@ function finishKill(error, tree, signal, callback) {
     killAll(tree, signal);
     if (callback) callback();
   } catch (killError) {
+    // This runs inside an async ps/pgrep 'close' handler. A non-ESRCH process.kill
+    // failure (EPERM, recycled-PID race) during a routine algo switch / watchdog
+    // restart / benchmark teardown reaches here. When the caller passed no callback
+    // (fire-and-forget kill), rethrowing would escape to the event loop as an
+    // uncaught exception and crash the whole miner; swallow it so the kill degrades
+    // instead, just as an ESRCH is already swallowed in killPidOnce.
     if (callback) callback(killError);
-    else throw killError;
   }
 }
 

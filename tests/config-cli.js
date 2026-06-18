@@ -96,4 +96,18 @@ describe("JSON-line framing", () => {
     assert.deepEqual(invalid, ["not-json"]);
     assert.equal(stringifyLine({ ok: true }), "{\"ok\":true}\n");
   });
+
+  it("drops an over-long un-terminated line instead of buffering without bound", () => {
+    const parsed = [];
+    let invalidCount = 0;
+    const parser = createJsonLineParser((json) => parsed.push(json), () => { invalidCount += 1; });
+    // Stream > 1 MiB with no newline; the parser must cap and reset, not OOM.
+    const chunk = "x".repeat(256 * 1024);
+    for (let i = 0; i < 6; i += 1) parser.push(chunk);
+    assert.ok(invalidCount >= 1, "over-long line is reported as invalid");
+    assert.deepEqual(parsed, [], "no garbage is parsed from the over-long line");
+    // Close the abandoned line, then a fresh framed line parses normally (clean resync).
+    parser.push("more-garbage\n{\"c\":3}\n");
+    assert.deepEqual(parsed, [{ c: 3 }]);
+  });
 });

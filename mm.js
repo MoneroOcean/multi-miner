@@ -37,6 +37,7 @@ class MultiMinerApp {
     this.lastAlgoChangeTime = null;
     this.lastMinerHashrate = null;
     this.mainPoolCheckTimer = null;
+    this.poolReconnectTimer = null;
     this.minerProc = null;
     this.nextMinerToRun = null;
     this.isWantMinerKill = false;
@@ -143,6 +144,8 @@ class MultiMinerApp {
     this.watchdogTimers = [];
     clearTimeout(this.mainPoolCheckTimer);
     this.mainPoolCheckTimer = null;
+    clearTimeout(this.poolReconnectTimer);
+    this.poolReconnectTimer = null;
     if (this.currPoolSocket) this.currPoolSocket.destroy();
     this.currPoolSocket = null;
     this.ethProxyWork.clear();
@@ -364,7 +367,7 @@ class MultiMinerApp {
     if (this.currPoolNum >= this.config.pools.length) {
       if (this.flags.verbose) this.logger.log("Waiting 60 seconds before trying to connect to the same pools once again");
       this.currPoolNum = 0;
-      setTimeout(() => this.connectPool(this.currPoolNum), this.options.reconnectDelayMs || 60 * 1000);
+      this.poolReconnectTimer = setTimeout(() => this.connectPool(this.currPoolNum), this.options.reconnectDelayMs || 60 * 1000);
     } else {
       this.connectPool(this.currPoolNum);
     }

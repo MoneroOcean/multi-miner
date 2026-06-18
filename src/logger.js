@@ -28,7 +28,19 @@ class Logger {
   }
 
   append(line) {
-    if (this.config && this.config.log_file) fs.appendFileSync(this.config.log_file, line);
+    if (!this.config || !this.config.log_file) return;
+    try {
+      fs.appendFileSync(this.config.log_file, line);
+    } catch (error) {
+      // log()/err()/miner() run from timer callbacks and socket handlers; an
+      // unguarded appendFileSync throw (disk full, log path removed/unwritable,
+      // read-only remount, NFS error) would become an uncaught exception and kill
+      // the long-running miner. Degrade to stderr instead so logging keeps working.
+      if (!this.appendFailed) {
+        this.appendFailed = true;
+        process.stderr.write(`!!! Failed to write log file '${this.config.log_file}': ${error.message}\n`);
+      }
+    }
   }
 
   verbose(message) {
