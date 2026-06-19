@@ -405,7 +405,8 @@ class MultiMinerApp {
 
   startMinerProcess(cmd, outCb) {
     this.lastMinerHashrate = null;
-    this.lastAlgoChangeTime = null;
+    // NB: do NOT reset lastAlgoChangeTime here — switchAlgo sets it (mm.js:335) and the
+    // 15-min hashrate-watchdog warmup grace reads it; nulling it on (re)start made that grace dead.
     this.isWantMinerKill = false;
     let proc;
     try {
