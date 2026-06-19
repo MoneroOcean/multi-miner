@@ -28,6 +28,16 @@ describe("protocol and diagnostics", () => {
     ]);
   });
 
+  it("scales the ethproxy boundary by the eth-stratum 2^32 factor (#7)", () => {
+    const work = ethProxyWork(ethNotifyParams(), { jsonrpc: "2.0", method: "mining.set_difficulty", params: [2] });
+    const boundary = BigInt(work[2]);
+    const scale = 1000000n;
+    const scaled = BigInt(Math.floor(2 * Number(scale)));
+    const expected = ((1n << 256n) * scale) / (scaled << 32n); // 2^256/(d*2^32)
+    assert.equal(boundary, expected, "boundary must be 2^256/(d*2^32), not the 2^32-too-loose 2^256/d");
+    assert.ok(boundary < (1n << 256n) / 2n, "scaled boundary is far below the old unscaled value");
+  });
+
   it("detects pushed ETH proxy work result frames", () => {
     assert.equal(isEthProxyWorkResult({ id: 0, jsonrpc: "2.0", result: ["0xaa", "0xbb", "0xcc"], algo: "etchash" }), true);
     assert.equal(isEthProxyWorkResult({ id: 0, jsonrpc: "2.0", result: ["0xaa", "0xbb", "0xcc", "0x123"], algo: "etchash" }), true);

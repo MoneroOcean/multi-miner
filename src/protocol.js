@@ -98,7 +98,13 @@ function difficultyTarget(value) {
   const scale = 1000000n;
   const scaledDifficulty = BigInt(Math.max(1, Math.floor(difficulty * Number(scale))));
   const max = (1n << 256n) - 1n;
-  const target = ((1n << 256n) * scale) / scaledDifficulty;
+  // Eth-stratum difficulty carries an implicit 2^32 scale: the pool's pushEthJob sends
+  // internal_diff/2^32 as set_difficulty, and the miner multiplies it back to the boundary
+  // (target = 2^256/(diff*2^32)). The EthereumStratum path forwards set_difficulty so the miner
+  // applies that factor itself; but on the ethproxy/eth_getWork path Multi-Miner computes the
+  // boundary, so it must apply the 2^32 here too. Without it the boundary is exactly 2^32 too
+  // loose and the pool rejects every share. (Confirmed live against the MoneroOcean pool.)
+  const target = ((1n << 256n) * scale) / (scaledDifficulty << 32n);
   return `0x${  (target > max ? max : target).toString(16).padStart(64, "0")}`;
 }
 
