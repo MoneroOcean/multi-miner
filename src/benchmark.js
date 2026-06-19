@@ -5,7 +5,7 @@ const { forEachHashrate } = require("./hashrate");
 const { benchmarkSubscribeReply } = require("./miner-server");
 const { detectMinerProtocol, ethProxyWork, grinJsonReply, jsonReply } = require("./protocol");
 const { stringifyLine } = require("./json-lines");
-const { treeKill } = require("./process-manager");
+const { runSequential, treeKill } = require("./process-manager");
 
 function runBenchmarkRuns(options, callback) {
   const queue = [];
@@ -13,16 +13,7 @@ function runBenchmarkRuns(options, callback) {
     if (hasAlgoPerf(options.config, algo) || !(algo in options.config.algos)) continue;
     queue.push((resolve) => runOneBenchmark(options, algo, resolve));
   }
-
-  function next() {
-    const task = queue.shift();
-    if (!task) {
-      callback();
-      return;
-    }
-    task(next);
-  }
-  next();
+  runSequential(queue, callback);
 }
 
 function runOneBenchmark(options, algo, resolve) {

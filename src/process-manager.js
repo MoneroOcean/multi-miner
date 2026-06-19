@@ -24,7 +24,22 @@ function startMiner(command, options) {
   return startMinerRaw(parsed.exe, parsed.args, options);
 }
 
+// Run an array of (next) => ... tasks one at a time; each task calls next when
+// done. Invokes done() once the queue is drained.
+function runSequential(queue, done) {
+  function next() {
+    const task = queue.shift();
+    if (!task) {
+      done();
+      return;
+    }
+    task(next);
+  }
+  next();
+}
+
 module.exports = {
+  runSequential,
   startMiner,
   treeKill,
 };

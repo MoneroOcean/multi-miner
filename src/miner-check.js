@@ -2,7 +2,7 @@
 
 const { assignAlgoCommand } = require("./algorithms");
 const { benchmarkSubscribeReply } = require("./miner-server");
-const { treeKill } = require("./process-manager");
+const { runSequential, treeKill } = require("./process-manager");
 
 function setFirstMinerUserPass(config, json, logger, verbose) {
   if (!json.params || typeof json.params !== "object") return;
@@ -31,15 +31,7 @@ function checkMiners(options, callback) {
     options.logger.log(`Checking miner configurations (make sure they are all configured to connect to ${  options.config.miner_host  }:${  options.config.miner_port  } pool)`);
   }
 
-  function next() {
-    const task = queue.shift();
-    if (!task) {
-      callback();
-      return;
-    }
-    task(next);
-  }
-  next();
+  runSequential(queue, callback);
 }
 
 function checkSmartMiner(options, cmd, resolve) {

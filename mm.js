@@ -355,11 +355,11 @@ class MultiMinerApp {
 
   poolErr(poolNum) {
     if (poolNum === 0 && this.currPoolNum) {
-      if (!this.mainPoolCheckTimer) this.logger.err("[INTERNAL ERROR] Unexpected main_pool_check_timer state in pool_err");
+      if (!this.mainPoolCheckTimer) this.logger.err("[INTERNAL ERROR] Unexpected mainPoolCheckTimer state in poolErr");
       this.setMainPoolCheckTimer();
       return;
     }
-    if (this.currPoolNum !== poolNum) this.logger.err("[INTERNAL ERROR] Unexpected pool_num in pool_err");
+    if (this.currPoolNum !== poolNum) this.logger.err("[INTERNAL ERROR] Unexpected poolNum in poolErr");
     if (this.currPoolSocket && this.minerServer.socket) this.logger.err(`Pool (${  this.poolLabel()  }) <-> miner link was broken due to pool socket error`);
     this.currPoolSocket = null;
     this.currPoolLastJob = null;
