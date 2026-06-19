@@ -146,6 +146,8 @@ class MultiMinerApp {
     this.mainPoolCheckTimer = null;
     clearTimeout(this.poolReconnectTimer);
     this.poolReconnectTimer = null;
+    clearTimeout(this.pendingEthFirstJobTimer);
+    this.pendingEthFirstJobTimer = null;
     if (this.currPoolSocket) this.currPoolSocket.destroy();
     this.currPoolSocket = null;
     this.ethProxyWork.clear();
@@ -232,6 +234,7 @@ class MultiMinerApp {
   handleMinerExtranonceSubscribe(json, socket) { this.minerServer.write(socket, jsonReply(json, true)); if (this.minerServer.protocol === "eth") this.flushPendingEthFirstJob(); }
   handleEthProxySubmit(json, socket) {
     if (!this.currPoolSocket) {
+      this.logger.err(`Dropping ETH proxy submitWork (replied rejected) since pool (${this.poolLabel()}) socket is closed`);
       this.minerServer.write(socket, jsonReply(json, false));
       return;
     }

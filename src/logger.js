@@ -6,6 +6,13 @@ class Logger {
   constructor(config, flags) {
     this.config = config;
     this.flags = flags || {};
+    // EPIPE on a closed output pipe surfaces as an async 'error' event on the
+    // stream (not a synchronous throw), which would crash the long-running shim
+    // if unhandled. Swallow ONLY EPIPE (broken output pipe) once per stream; re-throw
+    // any other stream error so genuine failures still surface (and do not recurse into
+    // a failing write from the handler body).
+    if (process.stdout.listenerCount("error") === 0) process.stdout.on("error", (err) => { if (err && err.code !== "EPIPE") throw err; });
+    if (process.stderr.listenerCount("error") === 0) process.stderr.on("error", (err) => { if (err && err.code !== "EPIPE") throw err; });
   }
 
   log(message) {
