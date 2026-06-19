@@ -31,4 +31,40 @@ describe("mm lifecycle", () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     assert.equal(reconnected, false, "no reconnect is attempted after stop");
   });
+
+  it("nulls minerProc on a non-respawn close so a stale handle can't wedge replaceMiner (#4)", () => {
+    const app = new MultiMinerApp([], { cwd: fs.mkdtempSync(path.join(os.tmpdir(), "mm-close-")) });
+    app.logger = silentLogger();
+    app.minerProc = { pid: 1234 }; // a now-dead proc handle
+    app.currPoolSocket = null;     // non-respawn path (pool down)
+    app.handleMinerProcessClose("xmrig", 0, () => {});
+    assert.equal(app.minerProc, null, "dead miner handle cleared on a non-respawn close");
+  });
+
+  it("defers a restart with backoff (not synchronous) while under the failure cap (#6)", () => {
+    const app = new MultiMinerApp([], { cwd: fs.mkdtempSync(path.join(os.tmpdir(), "mm-backoff-")) });
+    app.logger = silentLogger();
+    app.currPoolSocket = {};
+    app.isWantMinerKill = false;
+    app.lastMinerStartTime = Date.now();
+    let spawned = 0;
+    app.startMinerProcess = () => { spawned += 1; return { pid: 1 }; };
+    app.handleMinerProcessClose("xmrig", 1, () => {});
+    assert.ok(app.minerRestartTimer, "a backoff restart timer was scheduled");
+    assert.equal(spawned, 0, "restart is deferred, not synchronous (no fork/exec storm)");
+    clearTimeout(app.minerRestartTimer); // cleanup so the deferred restart can't fire later
+  });
+
+  it("pauses miner auto-restart after the consecutive-failure cap (#6)", () => {
+    const app = new MultiMinerApp([], { cwd: fs.mkdtempSync(path.join(os.tmpdir(), "mm-cap-")) });
+    app.logger = silentLogger();
+    app.currPoolSocket = {};
+    app.isWantMinerKill = false;
+    app.lastMinerStartTime = Date.now(); // recent -> failures accumulate (no reset)
+    app.startMinerProcess = () => ({ pid: 1 });
+    app.minerRestartFailures = 5;        // = MINER_RESTART_MAX
+    app.handleMinerProcessClose("xmrig", 1, () => {}); // 6th failure -> over cap
+    assert.equal(app.minerRestartTimer, null, "no restart scheduled once over the failure cap");
+    assert.ok(app.minerRestartFailures > 5, "failure was counted");
+  });
 });

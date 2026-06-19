@@ -34,7 +34,9 @@ function runOneBenchmark(options, algo, resolve) {
   function finish() {
     completed = true;
     clearTimeout(timeout);
-    if (!minerProc) {
+    if (!minerProc || minerProc.exitCode !== null || minerProc.signalCode !== null) {
+      // Already exited (e.g. the miner quit before emitting parseable hashrate): 'close' has already
+      // fired, so once('close') would never resolve and would wedge the sequential startup queue.
       resolve();
       return;
     }

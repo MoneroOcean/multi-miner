@@ -17,6 +17,13 @@ const { stringifyLine } = require("./src/json-lines");
 const VERSION = "v5.0";
 const AGENT = `Multi-Miner ${  VERSION}`;
 
+// Auto-restart backoff for an unexpectedly-closed miner so a persistently-failing miner doesn't
+// fork/exec storm. The consecutive-failure count resets once a miner has run longer than RESET_MS.
+const MINER_RESTART_BACKOFF_MS = 2000;
+const MINER_RESTART_BACKOFF_MAX_MS = 30000;
+const MINER_RESTART_MAX = 5;
+const MINER_RESTART_RESET_MS = 60000;
+
 class MultiMinerApp {
   constructor(argv, options) {
     this.argv = argv || [];
@@ -39,6 +46,9 @@ class MultiMinerApp {
     this.mainPoolCheckTimer = null;
     this.poolReconnectTimer = null;
     this.minerProc = null;
+    this.minerRestartTimer = null;
+    this.minerRestartFailures = 0;
+    this.lastMinerStartTime = 0;
     this.nextMinerToRun = null;
     this.isWantMinerKill = false;
     this.minerLastSubmitTime = null;
@@ -148,6 +158,8 @@ class MultiMinerApp {
     this.poolReconnectTimer = null;
     clearTimeout(this.pendingEthFirstJobTimer);
     this.pendingEthFirstJobTimer = null;
+    clearTimeout(this.minerRestartTimer);
+    this.minerRestartTimer = null;
     if (this.currPoolSocket) this.currPoolSocket.destroy();
     this.currPoolSocket = null;
     this.ethProxyWork.clear();
@@ -231,7 +243,7 @@ class MultiMinerApp {
     this.logger.err(`No active pool (${  this.poolLabel()  }) to send subscribe job to the miner!`);
     this.minerServer.write(socket, jsonError(json, "No active Multi-Miner pool"));
   }
-  handleMinerExtranonceSubscribe(json, socket) { this.minerServer.write(socket, jsonReply(json, true)); if (this.minerServer.protocol === "eth") this.flushPendingEthFirstJob(); }
+  handleMinerExtranonceSubscribe(json, socket) { this.minerServer.write(socket, jsonReply(json, true)); if (this.minerServer.protocol === "eth") this.schedulePendingEthFirstJob(); }
   handleEthProxySubmit(json, socket) {
     if (!this.currPoolSocket) {
       this.logger.err(`Dropping ETH proxy submitWork (replied rejected) since pool (${this.poolLabel()}) socket is closed`);
@@ -384,6 +396,9 @@ class MultiMinerApp {
 
   replaceMiner(nextMiner) {
     if (!nextMiner) return;
+    // A deliberate algo change is a fresh context — clear crash-loop backoff state so a paused
+    // auto-restart recovers.
+    this.minerRestartFailures = 0;
     if (!this.minerProc) {
       this.minerProc = this.startMinerProcess(nextMiner, (str) => this.printAllMessages(str));
       return;
@@ -405,6 +420,10 @@ class MultiMinerApp {
 
   startMinerProcess(cmd, outCb) {
     this.lastMinerHashrate = null;
+    // A new start (auto-restart, algo change, or initial) supersedes any pending backoff restart.
+    clearTimeout(this.minerRestartTimer);
+    this.minerRestartTimer = null;
+    this.lastMinerStartTime = Date.now();
     // NB: do NOT reset lastAlgoChangeTime here — switchAlgo sets it (mm.js:335) and the
     // 15-min hashrate-watchdog warmup grace reads it; nulling it on (re)start made that grace dead.
     this.isWantMinerKill = false;
@@ -429,10 +448,25 @@ class MultiMinerApp {
       if (code) this.logger.err(`Miner '${  cmd  }' exited with nonzero code ${  code}`);
       else this.logger.log(`Miner '${  cmd  }' exited with zero code`);
     }
-    if (this.currPoolSocket && !this.isWantMinerKill) {
-      this.logger.log(`Restarting '${  cmd  }' miner that was closed unexpectedly`);
-      this.minerProc = this.startMinerProcess(cmd, outCb);
+    // The process is dead; clear the handle so replaceMiner doesn't attach once('close') to a proc
+    // that already emitted 'close' (which would never fire and wedge miner startup).
+    this.minerProc = null;
+    if (!this.currPoolSocket || this.isWantMinerKill) return;
+    // Backoff + cap so a persistently-failing miner doesn't restart-storm. A miner that ran longer
+    // than the reset window was a transient glitch, not a crash loop, so reset the failure count.
+    if (Date.now() - this.lastMinerStartTime > MINER_RESTART_RESET_MS) this.minerRestartFailures = 0;
+    this.minerRestartFailures += 1;
+    if (this.minerRestartFailures > MINER_RESTART_MAX) {
+      this.logger.err(`Miner '${  cmd  }' failed ${  this.minerRestartFailures  } times in a row; pausing auto-restart until the next algo change or pool reconnect`);
+      return;
     }
+    const delay = Math.min(this.minerRestartFailures * MINER_RESTART_BACKOFF_MS, MINER_RESTART_BACKOFF_MAX_MS);
+    this.logger.log(`Restarting '${  cmd  }' miner (attempt ${  this.minerRestartFailures  }) in ${  delay  }ms`);
+    this.minerRestartTimer = setTimeout(() => {
+      this.minerRestartTimer = null;
+      if (!this.currPoolSocket || this.isWantMinerKill) return;
+      this.minerProc = this.startMinerProcess(cmd, outCb);
+    }, delay);
   }
 
   startWatchdogs() {
