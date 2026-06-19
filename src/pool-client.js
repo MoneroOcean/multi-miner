@@ -39,7 +39,7 @@ function connectPool(options) {
   }
 
   const socket = parsed.tls
-    ? tls.connect(parsed.port, parsed.host, { rejectUnauthorized: false })
+    ? tls.connect(parsed.port, parsed.host, { rejectUnauthorized: Boolean(config.tls_reject_unauthorized) })
     : net.connect(parsed.port, parsed.host);
 
   socket.on("connect", () => {
