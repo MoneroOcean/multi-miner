@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 "use strict";
 
-const { DEFAULT_ALGO, localAlgoPerf, normalizePoolAlgo } = require("./src/algorithms");
 const { runBenchmarkRuns } = require("./src/benchmark");
 const { createDefaultConfig, createDefaultFlags, parseArgs, printHelp, saveConfigFile } = require("./src/config");
 const { formatDiagnostics, validateConfig } = require("./src/diagnostics");
@@ -11,8 +10,10 @@ const { checkMiners } = require("./src/miner-check");
 const { MinerServer } = require("./src/miner-server");
 const { connectPool, writePoolSocket } = require("./src/pool-client");
 const { createEthProxyWorkTracker, detectMinerProtocol, ethProxySubmit, ethProxyWork, grinJsonReply, isEthProxyWorkResult, jsonError, jsonReply } = require("./src/protocol");
+const { forwardGrinPoolMessage: forwardGrinMessage, recordPoolMessage: recordPoolState } = require("./src/pool-state");
 const { startMiner, treeKill } = require("./src/process-manager");
 const { stringifyLine } = require("./src/json-lines");
+const { startWatchdogs: startWatchdogTimers } = require("./src/watchdogs");
 
 const VERSION = "v5.0";
 const AGENT = `Multi-Miner ${  VERSION}`;
@@ -316,28 +317,7 @@ class MultiMinerApp {
   schedulePendingEthFirstJob() { if (this.pendingEthFirstJobTimer || !this.pendingEthFirstJob || this.pendingEthSubscribeId !== null) return; this.pendingEthFirstJobTimer = setTimeout(() => this.flushPendingEthFirstJob(), 250); }
   flushPendingEthFirstJob() { if (this.pendingEthFirstJobTimer) clearTimeout(this.pendingEthFirstJobTimer); this.pendingEthFirstJobTimer = null; const pending = this.pendingEthFirstJob; this.pendingEthFirstJob = null; this.pendingEthSubscribeId = null; this.delayNextEthFirstJob = false; if (pending && this.minerServer.socket === pending.socket) this.sendFirstJob(pending.json, pending.socket); }
   shouldSendEthTarget() { return this.currPoolLastTarget && (this.currAlgo !== "autolykos2" || this.currPoolLastTarget.method === "mining.set_difficulty"); }
-  recordPoolMessage(json) {
-    let nextJobAlgo = null;
-    if ("method" in json) {
-      if (json.method === "job") {
-        const params = json.params && typeof json.params === "object" ? json.params : {};
-        nextJobAlgo = normalizePoolAlgo(params.algo || DEFAULT_ALGO, params);
-        this.currPoolLastJob = params;
-      } else if (json.method === "mining.notify") {
-        nextJobAlgo = normalizePoolAlgo(json.algo || (json.params && json.params.algo) || DEFAULT_ALGO, json.params);
-        this.currPoolLastJob = json.params || [];
-      } else if (json.method === "mining.set_target" || json.method === "mining.set_difficulty") {
-        this.currPoolLastTarget = json;
-      }
-    } else if (json.result && typeof json.result === "object" && "id" in json.result) {
-      this.currPoolMinerId = json.result.id;
-      if (json.result.job) {
-        nextJobAlgo = normalizePoolAlgo(json.result.job.algo || DEFAULT_ALGO, json.result.job);
-        this.currPoolLastJob = json.result.job;
-      }
-    }
-    return nextJobAlgo;
-  }
+  recordPoolMessage(json) { return recordPoolState(this, json); }
 
   switchAlgo(nextJobAlgo) {
     if (!(nextJobAlgo in this.config.algos)) {
@@ -356,14 +336,7 @@ class MultiMinerApp {
     return true;
   }
 
-  forwardGrinPoolMessage(json) {
-    const grinJson = Object.assign({}, json);
-    if (grinJson.result && grinJson.result.status === "OK") {
-      grinJson.method = "submit";
-      grinJson.result = "ok";
-    }
-    this.minerServer.write(this.minerServer.socket, stringifyLine(grinJson));
-  }
+  forwardGrinPoolMessage(json) { forwardGrinMessage(this, json); }
 
   poolErr(poolNum) {
     if (poolNum === 0 && this.currPoolNum) {
@@ -469,39 +442,7 @@ class MultiMinerApp {
     }, delay);
   }
 
-  startWatchdogs() {
-    if (this.config.watchdog) this.startSubmitWatchdog();
-    if (this.config.hashrate_watchdog) this.startHashrateWatchdog();
-  }
-
-  startSubmitWatchdog() {
-    if (this.flags.verbose) this.logger.log(`Starting miner watchdog timer (with ${  this.config.watchdog  } seconds max since last miner result)`);
-    const timer = setInterval(() => {
-      if (this.currPoolSocket) this.writePool({ jsonrpc: "2.0", id: "mm", method: "keepalived", params: {} });
-      if (!this.currPoolSocket || !this.minerServer.socket || this.minerLastSubmitTime === null) return;
-      const idleTime = (Date.now() - this.minerLastSubmitTime) / 1000;
-      if (idleTime > this.config.watchdog) {
-        this.logger.err(`No results from miner for more than ${  this.config.watchdog  } seconds. Restarting it...`);
-        this.minerLastSubmitTime = Date.now();
-        this.replaceMiner(this.currMiner);
-      }
-    }, this.options.watchdogIntervalMs || 60 * 1000);
-    this.watchdogTimers.push(timer);
-  }
-
-  startHashrateWatchdog() {
-    if (this.flags.verbose) this.logger.log(`Starting miner hashrate watchdog timer (with ${  this.config.hashrate_watchdog  }% min hashrate threshold)`);
-    const timer = setInterval(() => {
-      if (!this.currPoolSocket || !this.minerServer.socket || this.lastMinerHashrate === null) return;
-      if (this.lastAlgoChangeTime && Date.now() - this.lastAlgoChangeTime < 15 * 60 * 1000) return;
-      const minHashrate = localAlgoPerf(this.config, this.currAlgo) * this.config.hashrate_watchdog / 100;
-      if (this.lastMinerHashrate < minHashrate) {
-        this.logger.err(`Current miner hashrate ${  this.lastMinerHashrate  } is below minimum ${  minHashrate  } hashrate threshold. Restarting it...`);
-        this.replaceMiner(this.currMiner);
-      }
-    }, this.options.watchdogIntervalMs || 60 * 1000);
-    this.watchdogTimers.push(timer);
-  }
+  startWatchdogs() { startWatchdogTimers(this); }
 
   printAllMessages(str) {
     this.logger.miner(str);
