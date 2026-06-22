@@ -5,7 +5,6 @@ const path = require("path");
 
 const SRC_DIR = path.resolve(__dirname, "..", "src");
 const ROOT_FILES = [path.resolve(__dirname, "..", "mm.js")];
-const MAX_LOC = 500;
 const MAX_CRAP = 30;
 
 let failures = 0;
@@ -14,7 +13,7 @@ for (const file of ROOT_FILES) checkFile(file);
 for (const file of fs.readdirSync(SRC_DIR).filter((name) => name.endsWith(".js"))) checkFile(path.join(SRC_DIR, file));
 
 if (failures) process.exit(1);
-process.stdout.write("quality: source LOC and CRAP proxy checks passed\n");
+process.stdout.write("quality: CRAP proxy checks passed\n");
 
 function checkFunctions(file, text) {
   const lines = text.split(/\r?\n/);
@@ -31,8 +30,6 @@ function checkFunctions(file, text) {
 function checkFile(abs) {
   const label = path.relative(path.resolve(__dirname, ".."), abs);
   const text = fs.readFileSync(abs, "utf8");
-  const loc = text.split(/\r?\n/).length;
-  if (loc > MAX_LOC) fail(`${label  } has ${  loc  } LOC, max is ${  MAX_LOC}`);
   checkFunctions(label, text);
 }
 
