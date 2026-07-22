@@ -24,7 +24,7 @@ jobs:
         run: npm install -g npm@11.10.0
 
       - name: Install locked dependencies
-        run: npm ci
+        run: npm install --no-package-lock
 
       - name: Test
         run: npm test
@@ -70,7 +70,7 @@ jobs:
         run: npm install -g npm@11.10.0
 
       - name: Install locked dependencies
-        run: npm ci
+        run: npm install --no-package-lock
 
       - name: Build ${{ matrix.target }}
         run: npm run build:target -- ${{ matrix.target }}

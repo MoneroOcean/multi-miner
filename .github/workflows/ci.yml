@@ -26,7 +26,7 @@ jobs:
 
       - run: npm install -g npm@11.10.0
 
-      - run: npm ci
+      - run: npm install --no-package-lock
 
       - run: npm test
 
@@ -48,7 +48,7 @@ jobs:
 
       - run: npm install -g npm@11.10.0
 
-      - run: npm ci
+      - run: npm install --no-package-lock
 
       - name: Build current platform binary
         run: npm run build:current

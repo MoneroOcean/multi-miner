@@ -8,6 +8,7 @@
 .DS_Store
 dist/
 node_modules/
+package-lock.json
 .cache/
 coverage/
 test-artifacts/
