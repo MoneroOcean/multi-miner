@@ -20,10 +20,10 @@ const RELEASES = {
     prefix: "https://github.com/MoneroOcean/xmrig/releases/download/",
     binary: process.platform === "win32" ? "xmrig.exe" : "xmrig",
     asset: (assets) => pickAsset(assets, [
-      (asset) => LINUX_X64 && /lin64-compat/i.test(asset.name),
-      (asset) => LINUX_X64 && /lin64.*\.tar\.gz$/i.test(asset.name),
+      (asset) => LINUX_X64 && /lin(?:64)?-compat\.tar\.gz$/i.test(asset.name),
+      (asset) => LINUX_X64 && /lin(?:64)?\.tar\.gz$/i.test(asset.name),
       (asset) => process.platform === "darwin" && /mac.*\.(tar\.gz|zip)$/i.test(asset.name),
-      (asset) => WIN_X64 && /win64.*\.zip$/i.test(asset.name),
+      (asset) => WIN_X64 && /win(?:64)?\.zip$/i.test(asset.name),
     ]),
   },
   "srbminer-multi": {
