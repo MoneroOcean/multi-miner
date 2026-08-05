@@ -1,0 +1,103 @@
+Usage: mm.js [<config_file.json>] [options]
+Adding algo switching support to *any* stratum miner
+<config_file.json> is file name of config file to load before parsing options (mm.json by default)
+Config file and options should define at least one pool and miner:
+### Usage example with SwapReferenceMiner/MoneroVMiner on Linux (for c29 algo)
+
+* Get SwapReferenceMiner and MoneroVMiner:
+
+```shell
+wget https://github.com/swap-dev/SwapReferenceMiner/releases/download/1.2.0/SwapReferenceMiner-1.2.0-linux-self_contained.tar.gz
+tar xf SwapReferenceMiner-1.2.0-linux-self_contained.tar.gz
+wget https://github.com/xmvdev/MoneroVMiner/releases/download/v1.0/monerovMiner-linux64.tar.gz
+tar xf monerovMiner-linux64.tar.gz
+mv SwapReferenceMiner-1.2.0-linux-self_contained SwapReferenceMiner
+mv monerovMiner-linux64 MoneroVMiner
+```
+
+* Configure SwapReferenceMinerCLI this way (put your Monero wallet address):
+
+```shell
+SwapReferenceMiner/SwapReferenceMinerCLI
+```
+```
+No config file found, it will be generated now....
+Autodetecting GPUs...
+Detected 0 suitable nvidia devices
+Detected 1 suitable AMD devices
+Enter your mining pool stratum address:
+localhost:3333
+Use TLS? (y/n)         [Note that the pool:port must support TLS]
+n
+Enter your pool login:
+88xJx8jBrQwLvbKwnUK8B5hgcR4FLWjRj9fJqn3rykiMWqwrGNjHNGiW3mj3igu7hU3xkbsY1LDSxfHmm29d39FK9uxyvQn
+Enter your pool password:
+x
+```
+
+* Configure MoneroVMiner this way (put your Monero wallet address):
+
+```shell
+MoneroVMiner/bin/MoneroVMiner
+```
+```
+Starting MoneroV Miner ...
+No config file found, it will be generated now....
+Autodetecting GPUs...
+Detected 0 suitable nvidia devices
+Detected 1 suitable AMD devices
+Enter your mining pool stratum address (IP:PORT) :
+localhost:3333
+Enter your MoneroV Wallet-Address:
+88xJx8jBrQwLvbKwnUK8B5hgcR4FLWjRj9fJqn3rykiMWqwrGNjHNGiW3mj3igu7hU3xkbsY1LDSxfHmm29d39FK9uxyvQn
+Enter your Rig Name: xmrig 1
+x
+
+Created new config.xml in (./config.xml).
+<CTRL+C>
+```
+
+* Enable debug output to get hashrate (you can return it to INFO later):
+
+```shell
+sed -i 's/<ConsoleMinimumLogLevel>.\+<\/ConsoleMinimumLogLevel>/<ConsoleMinimumLogLevel>DEBUG<\/ConsoleMinimumLogLevel>/' SwapReferenceMiner/config.xml
+```
+
+* Configure xmrig for OpenCL mining (optional, just for example here)
+
+```shell
+wget https://github.com/xmrig/xmrig/releases/download/v5.4.0/xmrig-5.4.0-xenial-x64.tar.gz
+tar xf xmrig-5.4.0-xenial-x64.tar.gz
+cp xmrig-5.4.0/* .
+sed -i '/^ *"cpu":/,/^ *[^:]*:/s/"enabled": true/"enabled": false/' config.json
+sed -i '/^ *"opencl":/,/^ *[^:]*:/s/"enabled": false/"enabled": true/' config.json
+sed -i 's/"url": *"[^"]*",/"url": "localhost:3333",/' config.json
+sed -i 's/"user": *"[^"]*",/"user": "89TxfrUmqJJcb1V124WsUzA78Xa3UYHt7Bg8RGMhXVeZYPN8cE5CZEk58Y1m23ZMLHN7wYeJ9da5n5MXharEjrm41hSnWHL",/' config.json
+```
+
+* Run Meta Miner (adding xmrig for OpenCL):
+
+```shell
+./mm.js -p=gulf.moneroocean.stream:10001 --c29s="./SwapReferenceMiner/SwapReferenceMinerCLI mode=rolling" --c29v="./MoneroVMiner/bin/MoneroVMiner" -m="./xmrig --config=config.json"
+```
+
+* Please note that your c29 miner reports hashrate in graphs per second (gps), while algo_perf in mm.js will have it in hps, which is gps divided by 32 for
+  c29s algo, gps divided by 16 for c29v algo and gps divided by 40 for c29b algo.Options:
+        --pool=<pool> (-p):             <pool> is in pool_address:pool_port format, where pool_port can be <port_number> or ssl<port_number>
+        --host=<hostname>:              defines host that will be used for miner connections (localhost 127.0.0.1 by default)
+        --port=<number>:                defines port that will be used for miner connections (3333 by default)
+        --user=<wallet> (-u):           <wallet> to use as pool user login (will be taken from the first miner otherwise)
+        --pass=<miner_id>:              <miner_id> to use as pool pass login (will be taken from the first miner otherwise)
+        --perf_<algo>=<hashrate>        Sets hashrate for algo that is: rx/0, rx/wow, cn/r, cn-pico/trtl, cn-heavy/xhv, cn/gpu, argon2/chukwa, k12, c29s, c29v, c29b, kawpow, ethash, autolykos2, panthera, ghostrider
+        --algo_min_time=<seconds>       Sets <seconds> minimum time pool should keep our miner on one algo (0 default, set higher for starting miners)
+        --miner=<command_line> (-m):    <command_line> to start smart miner that can report algo itself
+        --<algo>=<command_line>:        <command_line> to start miner for <algo> that can not report it itself
+        --watchdog=<seconds> (-w):      restart miner if is does not submit work for <seconds> (600 by default, 0 to disable)
+        --hashrate_watchdog=<percent>:  restart miner if is hashrate dropped below <percent> value of of its expected hashrate (0 by default to disable)
+        --miner_stdin:                  enables stdin (input) in miner
+        --quiet (-q):                   do not show miner output during configuration and also less messages
+        --verbose (-v):                 show more messages
+        --debug:                        show pool and miner messages
+        --log=<file_name>:              <file_name> of output log
+        --no-config-save:               Do not save config file
+        --help (-help,-h,-?):           Prints this help text
