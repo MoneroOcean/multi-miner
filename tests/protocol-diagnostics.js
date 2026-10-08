@@ -1,16 +1,87 @@
 "use strict";
 
 const assert = require("assert");
+const crypto = require("crypto");
+const { EventEmitter } = require("events");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { describe, it } = require("node:test");
 
 const { createDefaultConfig } = require("../src/config");
+const { runBenchmarkRuns } = require("../src/benchmark");
 const { formatDiagnostics, validateConfig } = require("../src/diagnostics");
 const { detectMinerProtocol, ethProxySubmit, ethProxyWork, ethSubscribeResult, isEthProxyWorkResult } = require("../src/protocol");
 const { MultiMinerApp } = require("../mm");
 const { ethNotifyParams, silentLogger } = require("./common/helpers");
+
+function benchmarkFixture(t, algo, login) {
+  const config = { algos: { [algo]: "fixture" }, algo_perf: {} };
+  const child = new EventEmitter();
+  // An already-exited fixture must drain its close event without signalling a PID.
+  child.exitCode = 0;
+  child.signalCode = null;
+  const lines = [];
+  const fixture = { config, child, completed: false };
+  const server = {
+    setHandlers(handlers) { fixture.handlers = handlers; },
+    write(socket, line) { lines.push(line); },
+  };
+  t.after(() => child.emit("close", 0));
+  runBenchmarkRuns({
+    config,
+    server,
+    logger: silentLogger(),
+    printMessages() {},
+    startMiner(command, output) { fixture.output = output; return child; },
+    timeoutMs: 1000,
+    isStopping: () => false,
+  }, () => { fixture.completed = true; });
+  fixture.handlers.login(login, {});
+  fixture.handlers.firstJob(login, {});
+  fixture.protocol = server.protocol;
+  fixture.line = lines.at(-1);
+  fixture.reply = JSON.parse(fixture.line);
+  return fixture;
+}
+
+describe("benchmark protocol jobs", () => {
+  it("gives JSON-login C29 miners native Cuckaroo work and stabilizes three reports", (t) => {
+    const fixture = benchmarkFixture(t, "c29", { id: 1, method: "login", params: {} });
+    assert.equal(fixture.protocol, "default");
+    const job = fixture.reply.result.job;
+    assert.equal(job.algo, "cuckaroo");
+    assert.match(job.blob, /^[0-9a-f]{64}$/);
+    assert.match(job.target, /^[0-9a-f]{16}$/);
+    assert.equal(job.target, "0100000000000000");
+    assert.equal(job.proofsize, 42);
+    assert.equal(job.noncebytes, 8);
+    assert.equal(job.nonceoffset, 0);
+    assert.equal(Object.hasOwn(job, "seed_hash"), false);
+    assert.equal(fixture.reply.id, 1);
+    assert.equal(fixture.line.indexOf('"id":1') < fixture.line.indexOf('"result"'), true);
+
+    for (let report = 0; report < 3; report++) {
+      fixture.output("| smry | 0/0/0 |     | --  | --  | --      | 42.0 H/s | Mining |\n");
+      assert.equal(Object.hasOwn(fixture.config.algo_perf, "c29"), report === 2);
+      assert.equal(fixture.completed, false, "completion must await child output closure");
+    }
+    assert.equal(fixture.config.algo_perf.c29, 1);
+    fixture.child.emit("close", 0);
+    assert.equal(fixture.completed, true);
+  });
+
+  for (const [algo, login, protocol, expectedHash] of [
+    ["cn/gpu", { id: 1, method: "login", params: {} }, "default", "fd6b617ef774feff9e461e5c622ac93a0c68f1a52090f30788b1d56a0b4c8231"],
+    ["c29", { id: "Stratum", method: "login", params: {} }, "grin", "2fb0385f58c150e85f55295929872d06910110a9eb9d24e128d3b1167934655e"],
+  ]) {
+    it(`preserves the ${algo} ${protocol} benchmark response byte-for-byte`, (t) => {
+      const fixture = benchmarkFixture(t, algo, login);
+      assert.equal(fixture.protocol, protocol);
+      assert.equal(crypto.createHash("sha256").update(fixture.line).digest("hex"), expectedHash);
+    });
+  }
+});
 
 describe("protocol and diagnostics", () => {
   it("detects protocols without missing-field crashes", () => {

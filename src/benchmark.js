@@ -209,6 +209,26 @@ function autolykosJob() {
 }
 
 function defaultBenchmarkJob(algo, json) {
+  // JSON-login C29 miners consume native Cuckaroo work, not a CryptoNote blob.
+  const job = algo === "c29" ? {
+    target: "0100000000000000", // Eight-byte little-endian target keeps synthetic shares rare.
+    blob: "00".repeat(32),
+    algo: "cuckaroo",
+    proofsize: 42,
+    noncebytes: 8,
+    nonceoffset: 0,
+    height: 0,
+    job_id: "benchmark1",
+    id: "benchmark",
+  } : {
+    target: "01000000",
+    blob: "7f7ffeeaa0db054f15eca39c843cb82c15e5c5a7743e06536cb541d4e96e90ffd31120b7703aa90000000076a6f6e34a9977c982629d8fe6c8b45024cafca109eef92198784891e0df41bc03",
+    seed_hash: "0000000000000000000000000000000000000000000000000000000000000001",
+    algo,
+    height: 0,
+    job_id: "benchmark1",
+    id: "benchmark",
+  };
   return stringifyLine({
     jsonrpc: "2.0",
     id: "id" in json ? json.id : 1,
@@ -216,15 +236,7 @@ function defaultBenchmarkJob(algo, json) {
     result: {
       id: "benchmark",
       status: "OK",
-      job: {
-        target: "01000000",
-        blob: "7f7ffeeaa0db054f15eca39c843cb82c15e5c5a7743e06536cb541d4e96e90ffd31120b7703aa90000000076a6f6e34a9977c982629d8fe6c8b45024cafca109eef92198784891e0df41bc03",
-        seed_hash: "0000000000000000000000000000000000000000000000000000000000000001",
-        algo,
-        height: 0,
-        job_id: "benchmark1",
-        id: "benchmark",
-      },
+      job,
     },
   });
 }
