@@ -1,15 +1,20 @@
 "use strict";
 
 const childProcess = require("child_process");
+const path = require("path");
 const { formatCommand, splitCommand } = require("./command");
 const { treeKill } = require("./process-tree");
 
 function startMinerRaw(exe, args, options) {
   const opts = options || {};
-  const cmd = formatCommand(exe, args);
+  // Some Windows miners cannot initialize when launched with a relative image path.
+  const executable = process.platform === "win32" && !path.win32.isAbsolute(exe) && path.win32.basename(exe) !== exe
+    ? path.win32.resolve(exe)
+    : exe;
+  const cmd = formatCommand(executable, args);
   if (opts.verbose && opts.logger) opts.logger.log(`Starting miner: ${  cmd}`);
   const spawnOptions = opts.minerStdin ? { stdio: ["inherit", "pipe", "pipe"] } : {};
-  const proc = childProcess.spawn(exe, args, spawnOptions);
+  const proc = childProcess.spawn(executable, args, spawnOptions);
 
   if (proc.stdout) proc.stdout.on("data", (data) => { if (opts.onOutput) opts.onOutput(String(data)); });
   if (proc.stderr) proc.stderr.on("data", (data) => { if (opts.onOutput) opts.onOutput(String(data)); });
