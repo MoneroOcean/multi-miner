@@ -26,9 +26,9 @@ function startMiner(command, options) {
 
 // Run an array of (next) => ... tasks one at a time; each task calls next when
 // done. Invokes done() once the queue is drained.
-function runSequential(queue, done) {
+function runSequential(queue, done, isStopping) {
   function next() {
-    const task = queue.shift();
+    const task = isStopping && isStopping() ? null : queue.shift();
     if (!task) {
       done();
       return;

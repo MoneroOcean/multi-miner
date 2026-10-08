@@ -68,6 +68,7 @@ class MultiMinerApp {
     this.nextMinerToRun = null;
     this.isWantMinerKill = false;
     this.isStopping = false;
+    this.stopPromise = null;
     this.minerLastSubmitTime = null;
     this.watchdogTimers = [];
     this.minerServer = new MinerServer({
@@ -107,7 +108,9 @@ class MultiMinerApp {
     }
 
     await this.listen();
+    if (this.isStopping) return 0;
     if (!this.options.skipMinerCheck) await this.checkMiners(parsed);
+    if (this.isStopping) return 0;
     const diagnostics = validateConfig(this.config);
     if (diagnostics.errors.length) {
       for (const error of diagnostics.errors) this.logger.err(`[FATAL] ${  error}`);
@@ -115,7 +118,10 @@ class MultiMinerApp {
       return 1;
     }
     if (process.title !== this.config.proc_title) process.title = this.config.proc_title;
-    await this.runBenchmarks(); this.main(); return undefined;
+    await this.runBenchmarks();
+    if (this.isStopping) return 0;
+    this.main();
+    return undefined;
   }
 
   listen() {
@@ -143,6 +149,7 @@ class MultiMinerApp {
         smartMiners: parsed.smartMiners,
         startMiner: (cmd, outCb) => this.startMinerProcess(cmd, outCb),
         timeoutMs: this.options.checkTimeoutMs,
+        isStopping: () => this.isStopping,
       }, resolve);
     });
   }
@@ -156,6 +163,7 @@ class MultiMinerApp {
         startMiner: (cmd, outCb) => this.startMinerProcess(cmd, outCb),
         setBenchmarkAlgo: (algo) => { this.benchmarkAlgo = algo; },
         timeoutMs: this.options.benchmarkTimeoutMs,
+        isStopping: () => this.isStopping,
       }, resolve);
     });
   }
@@ -168,7 +176,8 @@ class MultiMinerApp {
     this.connectPool(0);
   }
 
-  async stop() {
+  stop() {
+    if (this.stopPromise) return this.stopPromise;
     this.isStopping = true;
     this.nextMinerToRun = null;
     this.isWantMinerKill = true;
@@ -185,11 +194,25 @@ class MultiMinerApp {
     if (this.currPoolSocket) this.currPoolSocket.destroy();
     this.currPoolSocket = null;
     this.ethProxyWork.clear();
-    if (this.minerProc && this.minerProc.pid) {
-      await new Promise((resolve) => treeKill(this.minerProc.pid, resolve));
-    }
-    this.minerProc = null;
-    await this.closeServer();
+    const proc = this.minerProc;
+    this.stopPromise = (async () => {
+      if (proc && proc.pid) {
+        // The tree-kill callback confirms delivery, not child closure.
+        await new Promise((resolve, reject) => {
+          proc.once('close', resolve);
+          // An exited child can still have descendant-owned output pipes to close.
+          if (proc.exitCode !== null || proc.signalCode !== null) return;
+          treeKill(proc.pid, (error) => {
+            if (!error) return;
+            proc.removeListener('close', resolve);
+            reject(error);
+          });
+        });
+      }
+      this.minerProc = null;
+      await this.closeServer();
+    })();
+    return this.stopPromise;
   }
   printParams() {
     const body = JSON.stringify(this.config, null, " ");
@@ -667,6 +690,8 @@ class MultiMinerApp {
       this.logger.err(`Failed to parse miner command '${  cmd  }': ${  error.message}`);
       return null;
     }
+    // Startup checks, benchmarks and live mining all own the same child slot.
+    this.minerProc = proc;
     proc.on("close", (code) => this.handleMinerProcessClose(cmd, code, outCb));
     return proc;
   }
@@ -716,9 +741,30 @@ class MultiMinerApp {
 
 async function runCli(argv, options) {
   const app = new MultiMinerApp(argv.slice(2), options);
-  const code = await app.run();
-  if (typeof code === "number") process.exitCode = code;
-  return code;
+  const removeSignals = () => {
+    process.removeListener('SIGINT', stop);
+    process.removeListener('SIGTERM', stop);
+  };
+  const stop = () => {
+    app.stop().then(removeSignals, () => {
+      process.exitCode = 1;
+      app.logger.err('Failed to stop the miner cleanly');
+      removeSignals();
+    });
+  };
+  process.on('SIGINT', stop);
+  process.on('SIGTERM', stop);
+  try {
+    const code = await app.run();
+    if (typeof code === 'number') {
+      process.exitCode = code;
+      removeSignals();
+    }
+    return code;
+  } catch (error) {
+    await app.stop().finally(removeSignals);
+    throw error;
+  }
 }
 
 module.exports = {

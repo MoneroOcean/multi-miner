@@ -31,7 +31,7 @@ function checkMiners(options, callback) {
     options.logger.log(`Checking miner configurations (make sure they are all configured to connect to ${  options.config.miner_host  }:${  options.config.miner_port  } pool)`);
   }
 
-  runSequential(queue, callback);
+  runSequential(queue, callback, options.isStopping);
 }
 
 function checkSmartMiner(options, cmd, resolve) {
@@ -62,17 +62,17 @@ function runMinerCheck(options, cmd, onLogin, resolve) {
     finish();
   }, options.timeoutMs || 60 * 1000);
 
-  function finish() {
+  function finish(closed = false) {
+    if (completed) return;
     completed = true;
     clearTimeout(timeout);
-    if (!minerProc || minerProc.exitCode !== null || minerProc.signalCode !== null) {
-      // Already exited (e.g. the miner quit before emitting parseable hashrate): 'close' has already
-      // fired, so once('close') would never resolve and would wedge the sequential startup queue.
+    if (!minerProc || closed) {
       resolve();
       return;
     }
     minerProc.once("close", resolve);
-    treeKill(minerProc.pid);
+    // An exited parent can leave descendants holding its output pipes open.
+    if (minerProc.exitCode === null && minerProc.signalCode === null) treeKill(minerProc.pid);
   }
 
   options.server.setHandlers({
@@ -88,6 +88,8 @@ function runMinerCheck(options, cmd, onLogin, resolve) {
   });
 
   minerProc = options.startMiner(cmd, options.printMessages);
+  if (minerProc) minerProc.once('close', () => finish(true));
+  else finish();
 }
 
 function setAlgo(options, algo, cmd) {

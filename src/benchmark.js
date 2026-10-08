@@ -13,7 +13,7 @@ function runBenchmarkRuns(options, callback) {
     if (hasAlgoPerf(options.config, algo) || !(algo in options.config.algos)) continue;
     queue.push((resolve) => runOneBenchmark(options, algo, resolve));
   }
-  runSequential(queue, callback);
+  runSequential(queue, callback, options.isStopping);
 }
 
 function runOneBenchmark(options, algo, resolve) {
@@ -32,21 +32,21 @@ function runOneBenchmark(options, algo, resolve) {
     finish();
   }, options.timeoutMs || 5 * 60 * 1000);
 
-  function finish() {
+  function finish(closed = false) {
+    if (completed) return;
     completed = true;
     clearTimeout(timeout);
     const done = () => {
       if (options.setBenchmarkAlgo) options.setBenchmarkAlgo(null);
       resolve();
     };
-    if (!minerProc || minerProc.exitCode !== null || minerProc.signalCode !== null) {
-      // Already exited (e.g. the miner quit before emitting parseable hashrate): 'close' has already
-      // fired, so once('close') would never resolve and would wedge the sequential startup queue.
+    if (!minerProc || closed) {
       done();
       return;
     }
     minerProc.once("close", done);
-    treeKill(minerProc.pid);
+    // An exited parent can leave descendants holding its output pipes open.
+    if (minerProc.exitCode === null && minerProc.signalCode === null) treeKill(minerProc.pid);
   }
 
   options.server.setHandlers({
@@ -71,6 +71,7 @@ function runOneBenchmark(options, algo, resolve) {
   });
 
   minerProc = options.startMiner(cmd, (str) => {
+    if (completed) return;
     options.printMessages(str);
     forEachHashrate(str, algo, (hashrate, entry, idx) => {
       if (printsNeeded < 0) {
@@ -87,6 +88,8 @@ function runOneBenchmark(options, algo, resolve) {
       return true;
     }, () => parserIndex);
   });
+  if (minerProc) minerProc.once('close', () => finish(true));
+  else finish();
 }
 
 function setBenchmarkPerf(options, algo, hashrate) {

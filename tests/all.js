@@ -1,5 +1,7 @@
 "use strict";
 
+require("./startup-lifecycle");
+
 require("./config-cli");
 require("./hashrate");
 require("./logger");
