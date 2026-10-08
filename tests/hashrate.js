@@ -3,10 +3,28 @@
 const assert = require("assert");
 const { describe, it } = require("node:test");
 
-const { extractHashrates } = require("../src/hashrate");
+const { extractHashrates, forEachHashrate } = require("../src/hashrate");
 const { nearlyEqual } = require("./common/helpers");
 
 describe("hashrate extraction", () => {
+  it("stabilizes lolMiner C29 graph rates from native output", () => {
+    const line = "Average speed (15s): 7.33 g/s";
+    let parserIndex = -1;
+    let reports = 0;
+    let completed = false;
+    for (let index = 0; index < 3; index++) {
+      forEachHashrate(line, "c29", (hashrate, entry, selected) => {
+        if (parserIndex < 0) parserIndex = selected;
+        assert.equal(entry.name, "lolMiner");
+        assert.ok(nearlyEqual(hashrate, 7.33 / 42));
+        completed = ++reports >= entry.stabilization;
+        return false;
+      }, () => parserIndex);
+      assert.equal(completed, index === 2);
+    }
+    assert.equal(reports, 3);
+  });
+
   const fixtures = [
     ["XMRig", "[2026] speed 10s/60s/15m n/a 123.4 120.0 H/s", "rx/0", 123.4],
     ["xmr-stak", "Totals (ALL):   100.0  250.5 H/s", "rx/0", 250.5],

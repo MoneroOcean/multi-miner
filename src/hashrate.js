@@ -36,7 +36,7 @@ const HASHRATE_PARSERS = [
   parser("MoneroVMiner", 2, /Total\s+:\s+([\d.]+)\s*gps/i, 1),
   parser("GMiner c29", 2, /\b([\d.]+)\s*G\/s\b/, 1),
   unitParser("GMiner", 2, /\b(?:Speed|Total speed|Total Speed):?\s*([\d.]+)\s*([kMGT]?H)\/s\b/i, 1, 2),
-  unitParser("lolMiner", 3, /Average speed \(15s\):\s*([\d.]+)\s*([kMGT]?h)\/s\b/i, 1, 2),
+  unitParser("lolMiner", 3, /Average speed \(15s\):\s*([\d.]+)\s*([kMGT]?h|g)\/s\b/i, 1, 2),
   unitParser("Rigel", 3, /\bspeed(?: 10s)?:\s*([\d.]+)\s*([kMGT]?H)\/s\b/i, 1, 2),
   unitParser("Rigel table", 3, /\|\s*Total:\s*([\d.]+)\s*([kMGT]?H)\/s\s*\|/i, 1, 2),
   unitParser("T-Rex", 3, /\b(?:Hashrate|Total):\s*([\d.]+)\s*([kMGT]?H)\/s\b/i, 1, 2),
