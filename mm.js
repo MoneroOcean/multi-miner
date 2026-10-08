@@ -299,13 +299,13 @@ class MultiMinerApp {
       if (extraNonce.params.length > 0) loginResult.extra_nonce = extraNonce.params[0];
       if (extraNonce.params.length > 1) loginResult.extra_nonce2_size = extraNonce.params[1];
     }
-    const reply = { jsonrpc: "2.0", error: null, result: Object.assign(loginResult, {
+    const result = Object.assign(loginResult, {
       id: this.currPoolMinerId,
       job: this.currPoolLastJob,
       status: "OK",
-    }) };
-    if ("id" in json) reply.id = json.id;
-    this.minerServer.write(socket, stringifyLine(reply));
+    });
+    // BZMiner needs the outer RPC ID serialized before the nested result ID.
+    this.minerServer.write(socket, jsonReply(json, result));
   }
 
   hasMinerExtension(json, extension) {

@@ -413,7 +413,7 @@ describe("protocol and diagnostics", () => {
     assert.deepEqual(minerWrites[0], { jsonrpc: "2.0", method: "job", params: app.currPoolLastJob });
   });
 
-  it("carries pool login nonce metadata into a cached object login reply", () => {
+  it("keeps object login RPC IDs before the full cached result", () => {
     const app = ethProxyApp("mm-object-metadata-");
     const minerWrites = [];
     app.minerServer.protocol = "default";
@@ -421,16 +421,31 @@ describe("protocol and diagnostics", () => {
       id: "pool-miner",
       status: "OK",
       extensions: ["mo-native"],
+      algo: "rx/0",
       extra_nonce: "abcd",
       extra_nonce2_size: 4,
+      metadata: { retained: true },
     };
     app.currPoolLastJob = { algo: "rx/0", blob: "00", job_id: "job1", target: "ffffffff" };
 
-    app.sendFirstJob({ id: 2, method: "login" }, jsonSink(minerWrites));
-
-    assert.deepEqual(minerWrites[0].result.extensions, ["mo-native"]);
-    assert.equal(minerWrites[0].result.extra_nonce, "abcd");
-    assert.equal(minerWrites[0].result.extra_nonce2_size, 4);
+    app.currPoolMinerId = "current-pool-miner";
+    const original = structuredClone(app.currPoolLoginResult);
+    const job = structuredClone(app.currPoolLastJob);
+    const requests = [0, 2, "rpc-id", null, undefined].map(id => ({ id, method: "login" }));
+    requests.push({ method: "login" }, Object.assign(Object.create({ id: "inherited-id" }), { method: "login" }));
+    for (const request of requests) {
+      app.sendFirstJob(request, jsonSink(minerWrites));
+      const reply = minerWrites.at(-1);
+      assert.deepStrictEqual(Object.keys(reply), request.id === undefined
+        ? ["jsonrpc", "error", "result"] : ["jsonrpc", "id", "error", "result"]);
+      const expected = { jsonrpc: "2.0", error: null, result: {
+        ...original, id: app.currPoolMinerId, job, status: "OK",
+      } };
+      if (request.id !== undefined) expected.id = request.id;
+      assert.deepStrictEqual(reply, expected);
+      assert.deepStrictEqual(app.currPoolLoginResult, original);
+      assert.deepStrictEqual(app.currPoolLastJob, job);
+    }
   });
 
   it("uses current native nonce metadata and keeps the array job inside notify", () => {
