@@ -69,8 +69,9 @@ class MinerServer {
 
     minerSocket.on("data", (msg) => parser.push(msg));
     minerSocket.on("end", () => this.handleClose("closed", minerSocket));
-    minerSocket.on("error", () => {
-      this.logger.err("Miner socket error");
+    minerSocket.on("error", (error) => {
+      const code = error && typeof error.code === "string" && /^[A-Z0-9_]{1,64}$/.test(error.code) ? error.code : "";
+      this.logger.err(`Miner socket error${ code ? `: ${ code }` : "" }`);
       minerSocket.destroy();
       this.handleClose("error", minerSocket);
     });

@@ -16,6 +16,33 @@ function makeMockSocket() {
 }
 
 describe("miner server", () => {
+  it("logs only bounded socket error codes and preserves cleanup", () => {
+    const cases = [
+      { code: "ECONNRESET", suffix: ": ECONNRESET" },
+      { code: "PRIVATE\\nINJECTED", suffix: "" },
+      { code: "A".repeat(65), suffix: "" },
+      { code: "invalid", suffix: "" },
+      { code: {}, suffix: "" },
+      { code: undefined, suffix: "" },
+    ];
+    for (const { code, suffix } of cases) {
+      const messages = [];
+      const server = new MinerServer({
+        config: { miner_host: "127.0.0.1", miner_port: 0 },
+        logger: { err(message) { messages.push(message); }, log() {} },
+        flags: {},
+        getPoolSocket: () => null,
+      });
+      const socket = makeMockSocket();
+      server.handleConnection(socket);
+      server.setCurrent(socket);
+      socket.emit("error", Object.assign(new Error("PRIVATE MESSAGE"), { code }));
+      assert.deepEqual(messages, [`Miner socket error${ suffix }`]);
+      assert.equal(socket.destroyed, true);
+      assert.equal(server.socket, null);
+    }
+  });
+
   it("attaches an error listener to a rejected duplicate connection so it cannot crash the process", () => {
     const server = new MinerServer({
       config: { miner_host: "127.0.0.1", miner_port: 0 },
