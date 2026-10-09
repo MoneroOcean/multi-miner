@@ -7,7 +7,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { MultiMinerApp } = require("../mm");
-const { assertNoLiveFailures, captureOutput, envInt, freePort, printSimpleResult, quoteForCommand, selectedCases, shellQuote, tail, waitForLiveSubmit, withTimeout, words, writeLiveConfig } = require("./common/live-helpers");
+const { assertNoLiveFailures, captureOutput, envInt, freePort, printSimpleResult, quoteForCommand, safeFailureClass, selectedCases, shellQuote, waitForLiveSubmit, withTimeout, words, writePrivateFile, writeLiveConfig } = require("./common/live-helpers");
 const { assertEasyEthTargets, createLiveFakePool } = require("./common/live-fake-pool");
 const { ensureMinerBinaries } = require("./common/live-miner-downloads");
 const { findConfiguredMinerBinary } = require("./common/live-miner-cache");
@@ -15,7 +15,9 @@ const { findConfiguredMinerBinary } = require("./common/live-miner-cache");
 const LIVE_TIMEOUT_MS = envInt("MM_LIVE_TIMEOUT_MS", 90000);
 const KAWPOW_LIVE_TIMEOUT_MS = envInt("MM_LIVE_KAWPOW_TIMEOUT_MS", 180000);
 const C29_LIVE_TIMEOUT_MS = envInt("MM_LIVE_C29_TIMEOUT_MS", 600000);
-const MOM_C29_DEVICE = process.env.MM_LIVE_MOM_C29_DEVICE || "gpu1*1";
+// C29's inline main value is seed_workgroup (64/128/256), not intensity; bare gpu1 keeps
+// the published release's bounded auto-tuning while selecting only the discrete Intel device.
+const MOM_C29_DEVICE = process.env.MM_LIVE_MOM_C29_DEVICE || "gpu1";
 const MOM_NO_BENCH_ALGOS = words(`
   argon2/chukwa argon2/chukwav2 argon2/wrkz c29 cn-heavy/0 cn-heavy/tube cn-heavy/xhv
   cn-lite/0 cn-lite/1 cn-pico/0 cn-pico/tlo cn/0 cn/1 cn/2 cn/ccx cn/double cn/fast
@@ -32,31 +34,46 @@ const GPU_CASES = [
   { algo: "c29", miner: "mom", name: "mom-c29" },
 ];
 assertEasyEthTargets(GPU_CASES);
-main().catch((error) => {
-  process.stderr.write(`${error && error.stack ? error.stack : String(error)  }\n`);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  main().catch((error) => {
+    process.stderr.write(`live-intel-gpu-miners: status=failed failure=${safeFailureClass(error)}\n`);
+    process.exitCode = 1;
+  });
+}
 
 async function main() {
-  const hasIntelGpu = hasIntelOpenClGpu();
-  if (hasIntelGpu) await ensureMinerBinaries(["srbminer-multi", "mom"]);
-  const binaries = {
-    "mom": findMom(),
-    srbminer: findSrbMiner(),
-  };
-  const results = [];
+  const extractionRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mm-intel-extraction-"));
+  let stopped = true;
+  try {
+    const hasIntelGpu = hasIntelOpenClGpu();
+    const selected = selectedCases(GPU_CASES, "MM_LIVE_INTEL_GPU_CASES");
+    const binaries = hasIntelGpu ? await resolveMinerPathsForRun(extractionRoot) : {};
+    const results = [];
 
-  for (const testCase of selectedCases(GPU_CASES, "MM_LIVE_INTEL_GPU_CASES")) {
-    const result = !binaries[testCase.miner]
-      ? { name: testCase.name, status: "skipped", reason: `${testCase.miner  } binary not found` }
-      : !hasIntelGpu
-        ? { name: testCase.name, status: "skipped", reason: "Intel OpenCL GPU not found" }
+    for (const testCase of selected) {
+      stopped = false;
+      const result = !hasIntelGpu || !binaries[testCase.miner]
+        ? unavailableCaseResult(testCase, hasIntelGpu)
         : await runCase(binaries[testCase.miner], testCase);
-    results.push(result);
-    printSimpleResult("live-intel-gpu-miners", result);
-  }
+      stopped = true;
+      results.push(result);
+      printSimpleResult("live-intel-gpu-miners", result);
+    }
 
-  assertNoLiveFailures(assert, results);
+    assertNoLiveFailures(assert, results);
+  } finally {
+    if (stopped) fs.rmSync(extractionRoot, {recursive: true, force: true});
+  }
+}
+
+function unavailableCaseResult(testCase, hasIntelGpu) {
+  if (!hasIntelGpu) {
+    return { name: testCase.name, status: "skipped", reason: "Intel OpenCL GPU not found" };
+  }
+  if (testCase.miner === "mom") {
+    return { name: testCase.name, status: "failed", reason: "required MoM binary unavailable" };
+  }
+    return { name: testCase.name, status: "skipped", reason: `${testCase.miner  } binary not found` };
 }
 
 async function runCase(binary, testCase) {
@@ -64,6 +81,7 @@ async function runCase(binary, testCase) {
   const pool = await createLiveFakePool(testCase);
   const output = [];
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "mm-intel-gpu-live-"));
+  const rawCapturePath = path.join(tmpDir, `${testCase.name}.output`);
   const args = appArgs(binary, testCase, minerPort, pool.port, tmpDir);
   const app = new MultiMinerApp(args, {
     checkTimeoutMs: testCase.miner === "mom" ? 60000 : 8000,
@@ -72,6 +90,7 @@ async function runCase(binary, testCase) {
     skipMinerCheck: true,
     watchdogIntervalMs: 1000,
   });
+  const minerExit = observeMinerExit(app);
   captureOutput(app, output);
 
   try {
@@ -79,16 +98,63 @@ async function runCase(binary, testCase) {
     const login = await withTimeout(pool.login, 15000, `${testCase.name  } Multi-Miner did not log in to fake pool`);
     assert.equal(login.method, "login");
     assert.ok(login.params.algo.includes(testCase.algo));
-    const outcome = await waitForOutcome(pool, testCase, output);
-    return { name: testCase.name, status: "passed", outcome };
+    const outcome = await waitForOutcome(pool, testCase, output, minerExit);
+    writePrivateFile(rawCapturePath, output.join("\n"));
+    return { name: testCase.name, status: "passed", outcome, rawCapturePath };
   } catch (error) {
     const text = output.join("\n");
-    if (isUnsupportedOutput(text)) return { name: testCase.name, status: "skipped", reason: `unsupported by this ${  testCase.miner  } build or device` };
-    return { name: testCase.name, status: "failed", reason: error.message, output: tail(text) };
+    writePrivateFile(rawCapturePath, `${text}\n${String(error.stack || error)}`.slice(-4 * 1024 * 1024));
+    if (isUnsupportedOutput(text)) return { name: testCase.name, status: "skipped", failureClass: "unsupported", rawCapturePath };
+    return { name: testCase.name, status: "failed", failureClass: safeFailureClass(error), rawCapturePath,
+      nativeCode: error.nativeCode, nativeSignal: error.nativeSignal };
   } finally {
     await app.stop();
     await pool.close();
   }
+}
+
+/**
+ * Observe the first miner child, including a synchronous launch failure. A dead child must fail
+ * the bounded live case immediately instead of waiting for the much longer fake-pool submit bound.
+ * @param {MultiMinerApp} app
+ * @returns {Promise<{code: number | null, signal: NodeJS.Signals | null, phase: string}> & {exit: Promise<{code: number | null, signal: NodeJS.Signals | null, phase: string}>}}
+ */
+function observeMinerExit(app) {
+  let resolveExit;
+  let resolveClose;
+  let exitObserved = false;
+  const exitPromise = new Promise((resolve) => { resolveExit = resolve; });
+  const closePromise = new Promise((resolve) => { resolveClose = resolve; });
+  closePromise.exit = exitPromise;
+  const finishExit = (state) => {
+    if (exitObserved) return;
+    exitObserved = true;
+    resolveExit(state);
+  };
+  let observed = false;
+  const observe = (child) => {
+    if (!child || observed) return child;
+    observed = true;
+    child.once("exit", (code, signal) => finishExit({code, signal, phase: "exit"}));
+    child.once("close", (code, signal) => {
+      resolveClose({code, signal, phase: "close"});
+      // ChildProcess normally emits exit first, but retain a close fallback for
+      // test doubles and launch wrappers that only expose the final stream event.
+      finishExit({code, signal, phase: "close"});
+    });
+    return child;
+  };
+  const startMinerProcess = app.startMinerProcess.bind(app);
+  app.startMinerProcess = (...args) => {
+    const child = startMinerProcess(...args);
+    if (!child) {
+      const state = {code: null, signal: null, phase: "launch"};
+      finishExit(state);
+      resolveClose(state);
+    }
+    return observe(child);
+  };
+  return closePromise;
 }
 
 function appArgs(binary, testCase, minerPort, poolPort, tmpDir) {
@@ -102,13 +168,26 @@ function appArgs(binary, testCase, minerPort, poolPort, tmpDir) {
   return args;
 }
 
-function findSrbMiner() {
-  return findConfiguredMinerBinary("SRBMINER_PATH", "srbminer-multi", process.platform === "win32" ? "SRBMiner-MULTI.exe" : "SRBMiner-MULTI");
+function resolveMinerPaths(resolved = {}) {
+  return {
+    "mom": findMom(resolved),
+    srbminer: findSrbMiner(resolved),
+  };
 }
 
-function findMom() {
+async function resolveMinerPathsForRun(extractionRoot) {
+  const configured = resolveMinerPaths({mom: "", "srbminer-multi": ""});
+  const needed = [configured.mom ? "" : "mom", configured.srbminer ? "" : "srbminer-multi"].filter(Boolean);
+  return resolveMinerPaths(await ensureMinerBinaries(needed, {extractionRoot}));
+}
+
+function findSrbMiner(resolved = {}) {
+  return findConfiguredMinerBinary("SRBMINER_PATH", "srbminer-multi", process.platform === "win32" ? "SRBMiner-MULTI.exe" : "SRBMiner-MULTI", resolved["srbminer-multi"]);
+}
+
+function findMom(resolved = {}) {
   const binaryName = process.platform === "win32" ? "mom.cmd" : "mom";
-  return findConfiguredMinerBinary("MOM_PATH", "mom", binaryName);
+  return findConfiguredMinerBinary("MOM_PATH", "mom", binaryName, resolved.mom);
 }
 
 function hasIntelOpenClGpu() {
@@ -145,7 +224,7 @@ function srbMinerCommand(binary, testCase, minerPort) {
 
 function moMinerCommand(binary, testCase, minerPort, tmpDir) {
   const configPath = path.join(tmpDir, "mom-config.json");
-  fs.writeFileSync(configPath, JSON.stringify(moMinerConfig(testCase, minerPort), null, 2));
+  writePrivateFile(configPath, JSON.stringify(moMinerConfig(testCase, minerPort), null, 2));
   const rootDir = path.dirname(binary);
   if (process.platform === "win32") return [quoteForCommand(binary), "mine", quoteForCommand(configPath)].join(" ");
   const libPath = [rootDir, path.join(rootDir, "lib"), path.join(rootDir, "lib64"), process.env.LD_LIBRARY_PATH || ""].filter(Boolean).join(":");
@@ -170,7 +249,8 @@ function moMinerConfig(testCase, minerPort) {
       first_job_wait: Math.max(5, Math.ceil(LIVE_TIMEOUT_MS / 3000)),
       close_wait: 2,
       donate_interval: 86400,
-      donate_length: 0,
+      // MoM 0.9 validates timer fields as positive; a null donation pool keeps this case primary-only.
+      donate_length: 60,
       keepalive: 30,
     },
     pools: [{
@@ -196,11 +276,14 @@ function moMinerConfig(testCase, minerPort) {
   };
 }
 
-async function waitForOutcome(pool, testCase, output) {
+async function waitForOutcome(pool, testCase, output, minerExit) {
   const timeoutMs = testCase.algo === "c29" ? C29_LIVE_TIMEOUT_MS : testCase.algo === "kawpow" ? KAWPOW_LIVE_TIMEOUT_MS : LIVE_TIMEOUT_MS;
-  return await waitForLiveSubmit(pool, testCase.name, output, timeoutMs);
+  const earlyExit = minerExit && minerExit.exit ? minerExit.exit : minerExit;
+  return await waitForLiveSubmit(pool, testCase.name, output, timeoutMs, earlyExit);
 }
 
 function isUnsupportedOutput(output) {
   return /unsupported|not supported|unknown algorithm|invalid algorithm|algorithm.*not.*found|no device|can't find .*device|libsvml\.so|ERR_DLOPEN_FAILED|was not connected and will be ignored|You need to define at least 1 valid algorithm/i.test(output);
 }
+
+module.exports = { moMinerCommand, observeMinerExit, resolveMinerPaths, resolveMinerPathsForRun, unavailableCaseResult, waitForOutcome };

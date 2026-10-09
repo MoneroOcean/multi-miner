@@ -6,7 +6,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { MultiMinerApp } = require("../mm");
-const { assertNoLiveFailures, captureOutput, envInt, freePort, printSimpleResult, quoteForCommand, selectedCases, shellQuote, tail, waitForLiveSubmit, withTimeout, words, writeLiveConfig } = require("./common/live-helpers");
+const { assertNoLiveFailures, captureOutput, envInt, freePort, printSimpleResult, quoteForCommand, safeFailureClass, selectedCases, shellQuote, waitForLiveSubmit, withTimeout, words, writePrivateFile, writeLiveConfig } = require("./common/live-helpers");
 const { createLiveFakePool } = require("./common/live-fake-pool");
 const { ensureMinerBinary } = require("./common/live-miner-downloads");
 const { findConfiguredMinerBinary } = require("./common/live-miner-cache");
@@ -23,24 +23,34 @@ const CPU_CASES = [
   ["xmrig-panthera", "panthera"],
 ].map(([name, algo]) => ({ algo, name }));
 
-main().catch((error) => {
-  process.stderr.write(`${error && error.stack ? error.stack : String(error)  }\n`);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  main().catch((error) => {
+    process.stderr.write(`[live:cpu] failure=${safeFailureClass(error)}\n`);
+    process.exitCode = 1;
+  });
+}
 
 async function main() {
-  const binary = await findXmrig();
-  const results = [];
+  const extractionRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mm-cpu-extraction-"));
+  let stopped = true;
+  try {
+    const binary = await findXmrig(extractionRoot);
+    const results = [];
 
-  for (const testCase of selectedCases(CPU_CASES, "MM_LIVE_CPU_CASES")) {
-    const result = binary
-      ? await runCase(binary, testCase)
-      : { name: testCase.name, status: "skipped", reason: "xmrig binary not found" };
-    results.push(result);
-    printSimpleResult("live-cpu-miners", result);
+    for (const testCase of selectedCases(CPU_CASES, "MM_LIVE_CPU_CASES")) {
+      stopped = false;
+      const result = binary
+        ? await runCase(binary, testCase)
+        : { name: testCase.name, status: "skipped", reason: "xmrig binary not found" };
+      stopped = true;
+      results.push(result);
+      printSimpleResult("live-cpu-miners", result);
+    }
+
+    assertNoLiveFailures(assert, results);
+  } finally {
+    if (stopped) fs.rmSync(extractionRoot, {recursive: true, force: true});
   }
-
-  assertNoLiveFailures(assert, results);
 }
 
 async function runCase(binary, testCase) {
@@ -48,6 +58,7 @@ async function runCase(binary, testCase) {
   const pool = await createLiveFakePool(testCase);
   const output = [];
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "mm-cpu-live-"));
+  const rawCapturePath = path.join(tmpDir, `${testCase.name}.raw.log`);
   const app = new MultiMinerApp(appArgs(binary, testCase, minerPort, pool.port, tmpDir), {
     cwd: tmpDir,
     reconnectDelayMs: 1000,
@@ -64,7 +75,8 @@ async function runCase(binary, testCase) {
     await waitForLiveSubmit(pool, testCase.name, output, LIVE_TIMEOUT_MS);
     return { name: testCase.name, status: "passed", outcome: "submit" };
   } catch (error) {
-    return { name: testCase.name, status: "failed", reason: error.message, output: tail(output.join("\n")) };
+    writePrivateFile(rawCapturePath, `${output.join("\n")}\n${String(error.stack || error)}`.slice(-2 * 1024 * 1024));
+    return { name: testCase.name, status: "failed", failureClass: safeFailureClass(error), rawCapturePath };
   } finally {
     await app.stop();
     await pool.close();
@@ -79,9 +91,14 @@ function appArgs(binary, testCase, minerPort, poolPort, tmpDir) {
   return args;
 }
 
-async function findXmrig() {
-  return findConfiguredMinerBinary("XMRIG_PATH", "xmrig-mo", process.platform === "win32" ? "xmrig.exe" : "xmrig") || await ensureMinerBinary("xmrig-mo");
+async function findXmrig(extractionRoot) {
+  const configured = findConfiguredMinerBinary("XMRIG_PATH", "xmrig-mo", process.platform === "win32" ? "xmrig.exe" : "xmrig", "");
+  if (configured) return configured;
+  return findConfiguredMinerBinary("XMRIG_PATH", "xmrig-mo", process.platform === "win32" ? "xmrig.exe" : "xmrig",
+    await ensureMinerBinary("xmrig-mo", {extractionRoot}));
 }
+
+module.exports = {findXmrig, runCase};
 
 function xmrigCommand(binary, testCase, minerPort, tmpDir) {
   const configPath = path.join(tmpDir, "xmrig-config.json");

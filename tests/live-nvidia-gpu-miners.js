@@ -8,7 +8,7 @@ const os = require("os");
 const path = require("path");
 const { MultiMinerApp } = require("../mm");
 const { extractHashrates } = require("../src/hashrate");
-const { assertNoLiveFailures, captureOutput, delay, envInt, freePort, quoteForCommand, selectedCases, shellQuote, tail, withTimeout, writeLiveConfig } = require("./common/live-helpers");
+const { assertNoLiveFailures, captureOutput, delay, envInt, freePort, quoteForCommand, safeFailureClass, safeResultSummary, selectedCases, shellQuote, withTimeout, writeLiveConfig } = require("./common/live-helpers");
 const { assertEasyEthTargets, createLiveFakePool } = require("./common/live-fake-pool");
 const { ensureMinerBinaries } = require("./common/live-miner-downloads");
 const { findMinerBinary, findMinerCommandDir } = require("./common/live-miner-cache");
@@ -20,14 +20,17 @@ const KAWPOW_LIVE_TIMEOUT_MS = envInt("MM_LIVE_KAWPOW_TIMEOUT_MS", 180000);
 const C29_LIVE_TIMEOUT_MS = envInt("MM_LIVE_C29_TIMEOUT_MS", 600000);
 const CAPTURE_DIR = process.env.MM_LIVE_CAPTURE_DIR || "";
 const WAIT_HASHRATE = process.env.MM_LIVE_WAIT_HASHRATE === "1";
+let resolvedMinerPaths = {};
 
-const MINERS = nvidiaMinerPlans(scriptCommand, WALLET);
+const MINERS = nvidiaMinerPlans((minerDir, command) => scriptCommand(minerDir, command, resolvedMinerPaths), WALLET);
 assertEasyEthTargets(MINERS);
 
-main().catch((error) => {
-  process.stderr.write(`${error && error.stack ? error.stack : String(error)  }\n`);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  main().catch((error) => {
+    process.stderr.write(`live-nvidia-gpu-miners: status=failed failure=${safeFailureClass(error)}\n`);
+    process.exitCode = 1;
+  });
+}
 
 async function main() {
   const miners = selectedCases(MINERS, "MM_LIVE_NVIDIA_GPU_MINERS");
@@ -35,14 +38,22 @@ async function main() {
     for (const miner of miners) printResult({ name: miner.name, status: "skipped", reason: "NVIDIA GPU not found" });
     return;
   }
-  await ensureMinerBinaries(miners.flatMap((miner) => [miner.binary, miner.cudaBinary].filter(Boolean).map((value) => value.split("/", 1)[0])));
-  const results = [];
-  for (const miner of miners) {
-    const result = await runMiner(miner);
-    results.push(result);
-    printResult(result);
+  const extractionRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mm-nvidia-extraction-"));
+  let stopped = true;
+  try {
+    resolvedMinerPaths = await ensureMinerBinaries(miners.flatMap((miner) => [miner.binary, miner.cudaBinary].filter(Boolean).map((value) => value.split("/", 1)[0])), {extractionRoot});
+    const results = [];
+    for (const miner of miners) {
+      stopped = false;
+      const result = await runMiner(miner);
+      stopped = true;
+      results.push(result);
+      printResult(result);
+    }
+    assertNoLiveFailures(assert, results);
+  } finally {
+    if (stopped) fs.rmSync(extractionRoot, {recursive: true, force: true});
   }
-  assertNoLiveFailures(assert, results);
 }
 
 async function runMiner(miner) {
@@ -76,21 +87,22 @@ async function runMiner(miner) {
     }
     assertMinerProtocol(app, miner);
     const rates = extractHashrates(output.join("\n"), miner.algo).map((rate) => rate.hashrate);
-    writeCapture(miner.name, output);
-    return { name: miner.name, status: "passed", outcome, protocol: app.minerServer.protocol, rates };
+    const rawCapturePath = writeCapture(miner.name, output, CAPTURE_DIR || tmpDir);
+    return { name: miner.name, status: "passed", outcome, protocol: app.minerServer.protocol, rates, rawCapturePath };
   } catch (error) {
-    writeCapture(miner.name, output);
-    return { name: miner.name, status: "failed", reason: error.message, output: tail(output.join("\n")) };
+    const rawCapturePath = writeCapture(miner.name, [...output, String(error.stack || error)], CAPTURE_DIR || tmpDir);
+    return { name: miner.name, status: "failed", failureClass: safeFailureClass(error), rawCapturePath,
+      nativeCode: error.nativeCode, nativeSignal: error.nativeSignal };
   } finally {
     await app.stop();
     await pool.close();
   }
 }
 
-function minerCommandContext(miner, tmpDir) {
+function minerCommandContext(miner, tmpDir, resolved = resolvedMinerPaths) {
   return {
     tmpDir,
-    xmrigCudaLoader: miner.cudaBinary ? findMinerBinary(...miner.cudaBinary.split("/", 2)) : "",
+    xmrigCudaLoader: miner.cudaBinary ? findMinerBinary(...miner.cudaBinary.split("/", 2), resolved[miner.cudaBinary.split("/", 1)[0]]) : "",
   };
 }
 
@@ -103,7 +115,7 @@ async function waitForOutcome(pool, miner, output) {
     if (outcome && (!WAIT_HASHRATE || extractHashrates(output.join("\n"), miner.algo).length > 0)) return outcome;
     await delay(500);
   }
-  throw new Error(`timed out; tail:\n${  tail(output.join("\n"))}`);
+  throw new Error("timed out before a submit");
 }
 
 function assertMinerProtocol(app, miner) {
@@ -122,8 +134,8 @@ function expectedProtocol(miner) {
   return miner.kind === "eth" ? "eth" : "";
 }
 
-function scriptCommand(minerDir, command) {
-  const dir = findMinerCommandDir(minerDir, command);
+function scriptCommand(minerDir, command, resolved = resolvedMinerPaths) {
+  const dir = findMinerCommandDir(minerDir, command, resolved[minerDir]);
   if (!dir) return "";
   const inner = `cd ${  shellQuote(dir)  } && ${  command}`;
   if (fs.existsSync("/usr/bin/script")) return `/usr/bin/script -q -c ${  quoteForCommand(inner)  } /dev/null`;
@@ -136,13 +148,17 @@ function hasNvidiaGpu() {
 }
 
 function printResult(result) {
-  const suffix = result.status === "passed" ? ` (${  result.outcome  }, protocol=${  result.protocol  }, rates=${  result.rates.length  })` : result.reason;
-  process.stdout.write(`live-nvidia-gpu-miners: ${  result.name  } ${  result.status  } ${  suffix  }\n`);
-  if (result.output) process.stdout.write(`${result.output  }\n`);
+  process.stdout.write(`live-nvidia-gpu-miners: ${safeResultSummary(result)}\n`);
 }
 
-function writeCapture(name, output) {
-  if (!CAPTURE_DIR) return;
-  fs.mkdirSync(CAPTURE_DIR, { recursive: true });
-  fs.writeFileSync(path.join(CAPTURE_DIR, `${name  }.log`), `${output.join("\n")  }\n`);
+function writeCapture(name, output, captureDir = CAPTURE_DIR) {
+  const directory = captureDir || fs.mkdtempSync(path.join(os.tmpdir(), "mm-live-capture-"));
+  fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+  fs.chmodSync(directory, 0o700);
+  const capturePath = path.join(directory, `${name  }.log`);
+  fs.writeFileSync(capturePath, `${output.join("\n").slice(-4 * 1024 * 1024)}\n`, { mode: 0o600 });
+  fs.chmodSync(capturePath, 0o600);
+  return capturePath;
 }
+
+module.exports = { minerCommandContext, scriptCommand, writeCapture };

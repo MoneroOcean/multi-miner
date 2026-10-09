@@ -55,23 +55,24 @@ Release binaries are OS and CPU architecture specific:
 
 Download the archive for your platform, unpack it beside your miner, and point
 the miner at Multi-Miner's local pool, usually `127.0.0.1:3333`.
+These examples require SRBMiner-Multi on Windows or Linux; macOS needs a compatible miner.
 
 Windows:
 
 ```powershell
-.\mm.exe -p=gulf.moneroocean.stream:ssl20128 -u=YOUR_XMR_WALLET --pass=x --rx/0="xmrig.exe --config=config.json"
+.\mm.exe -p=gulf.moneroocean.stream:ssl20128 -u=YOUR_XMR_WALLET --pass=x --cn/gpu="SRBMiner-MULTI.exe --algorithm cryptonight_gpu --pool 127.0.0.1:3333 --wallet YOUR_XMR_WALLET --password x --disable-cpu"
 ```
 
-Linux and macOS:
+Linux:
 
 ```sh
-./mm -p=gulf.moneroocean.stream:ssl20128 -u=YOUR_XMR_WALLET --pass=x --rx/0="./xmrig --config=config.json"
+./mm -p=gulf.moneroocean.stream:ssl20128 -u=YOUR_XMR_WALLET --pass=x --cn/gpu="./SRBMiner-MULTI --algorithm cryptonight_gpu --pool 127.0.0.1:3333 --wallet YOUR_XMR_WALLET --password x --disable-cpu"
 ```
 
 Source compatibility is kept. You can still run `mm.js` directly:
 
 ```sh
-node mm.js -p=gulf.moneroocean.stream:ssl20128 -u=YOUR_XMR_WALLET --pass=x --rx/0="./xmrig --config=config.json"
+node mm.js -p=gulf.moneroocean.stream:ssl20128 -u=YOUR_XMR_WALLET --pass=x --cn/gpu="./SRBMiner-MULTI --algorithm cryptonight_gpu --pool 127.0.0.1:3333 --wallet YOUR_XMR_WALLET --password x --disable-cpu"
 ```
 
 ## Configuration
@@ -84,23 +85,17 @@ Minimal `mm.json`:
 
 ```json
 {
-  "miner_host": "127.0.0.1",
-  "miner_port": 3333,
   "pools": ["gulf.moneroocean.stream:ssl20128"],
   "algos": {
-    "rx/0": "./xmrig --config=config.json",
     "cn/gpu": "./SRBMiner-MULTI --algorithm cryptonight_gpu --pool 127.0.0.1:3333 --wallet YOUR_XMR_WALLET --password x --disable-cpu",
     "etchash": "./SRBMiner-MULTI --algorithm etchash --pool 127.0.0.1:3333 --wallet YOUR_XMR_WALLET --password x --disable-cpu"
   },
   "algo_perf": {
-    "rx/0": 1000,
     "cn/gpu": 1000,
     "etchash": 50000000
   },
   "user": "YOUR_XMR_WALLET",
-  "pass": "x",
-  "watchdog": 600,
-  "hashrate_watchdog": 0
+  "pass": "x"
 }
 ```
 
@@ -140,13 +135,6 @@ compatibility. Add device selection, clocks, logging, API, or tuning options in
 your miner config when needed for your rig.
 
 ### Through Multi-Miner
-
-XMRig smart miner:
-
-```sh
-./mm -p=gulf.moneroocean.stream:ssl20128 -u=YOUR_XMR_WALLET --pass=x \
-  -m="./xmrig -o 127.0.0.1:3333 -u YOUR_XMR_WALLET -p x"
-```
 
 SRBMiner-Multi for `cn/gpu`:
 
@@ -243,7 +231,6 @@ useful differences are the pool URL syntax and any miner-specific protocol
 mode:
 
 ```sh
-XMRig:          -o gulf.moneroocean.stream:20128 --tls -p worker~rx/0
 SRBMiner-Multi: --pool gulf.moneroocean.stream:20128 --tls true --password worker~cn/gpu
 GMiner:         --server gulf.moneroocean.stream --port 20128 --ssl 1 --pass worker~etchash --proto stratum
 lolMiner:       --pool gulf.moneroocean.stream:20128 --tls on --pass worker~etchash --ethstratum ETHV1
@@ -268,7 +255,7 @@ CryptoDredge, Claymore, and legacy formats.
 For specific re-benchmarking:
 
 ```sh
-./mm --perf_rx/0=0 --perf_cn/gpu=0
+./mm --perf_etchash=0 --perf_cn/gpu=0
 ```
 
 ## Diagnostics
@@ -349,6 +336,11 @@ npm run test:live
 
 Set `MM_LIVE_DOWNLOAD=0` to disable live miner downloads and only use binaries
 already present in the local cache or specified by path overrides.
+When downloads are enabled, the latest GitHub release metadata is resolved and
+archives are kept under a release-tagged cache directory; the offline setting
+intentionally uses whatever compatible binary is already cached.
+
+These live tests check protocol compatibility, not recommended switching setups.
 
 Run the optional CPU live test. It uses only a fake localhost pool and downloads
 MoneroOcean XMRig into the local live cache when needed:
@@ -359,14 +351,14 @@ XMRIG_PATH=/path/to/xmrig MM_LIVE_CPU_CASES=xmrig-rx-0,xmrig-panthera npm run te
 ```
 
 Run the optional local Intel GPU live test. It uses only a fake localhost pool
-and skips if SRBMiner, mom, an algorithm, or an Intel OpenCL GPU is unavailable.
-SRBMiner-Multi and mom are downloaded into this repo's `.cache/live-miners`
+and skips unavailable algorithms or Intel OpenCL hardware. Missing MoM on supported
+Intel hardware is a failure. SRBMiner-Multi and MoM are downloaded into this repo's `.cache/live-miners`
 cache when needed. Override with `MM_LIVE_CACHE_DIR` or a miner-specific path:
 
 ```sh
 npm run test:live:intel-gpu
 SRBMINER_PATH=/path/to/SRBMiner-MULTI npm run test:live:intel-gpu
-MOM_PATH=/path/to/mom MM_LIVE_MOM_C29_DEVICE=gpu1*1 npm run test:live:intel-gpu
+MOM_PATH=/path/to/mom MM_LIVE_MOM_C29_DEVICE=gpu1 npm run test:live:intel-gpu
 MM_LIVE_INTEL_GPU_CASES=srbminer-cn-gpu,mom-c29 npm run test:live:intel-gpu
 ```
 

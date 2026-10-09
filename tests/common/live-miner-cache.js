@@ -8,18 +8,24 @@ const DEFAULT_CACHE_DIR = path.join(REPO_ROOT, ".cache", "live-miners");
 
 function liveMinerRoot() { return process.env.MM_LIVE_MINER_ROOT || process.env.MM_LIVE_CACHE_DIR || DEFAULT_CACHE_DIR; }
 
-function findMinerBinary(cacheKey, binaryName) { return findNewestNamedFile(path.join(liveMinerRoot(), cacheKey), binaryName); }
-
-function findConfiguredMinerBinary(envName, cacheKey, binaryName) {
-  const configured = process.env[envName];
-  return configured && fs.existsSync(configured) ? configured : findMinerBinary(cacheKey, binaryName);
+function findMinerBinary(cacheKey, binaryName, resolvedPath) {
+  if (resolvedPath !== undefined) return resolvedPath && fs.existsSync(resolvedPath) ? resolvedPath : "";
+  return findNewestNamedFile(path.join(liveMinerRoot(), cacheKey), binaryName);
 }
 
-function findMinerCommandDir(cacheKey, command) { return findMinerCommandDirIn(liveMinerRoot(), cacheKey, command); }
+function findConfiguredMinerBinary(envName, cacheKey, binaryName, resolvedPath) {
+  const configured = process.env[envName];
+  return configured && fs.existsSync(configured) ? configured : findMinerBinary(cacheKey, binaryName, resolvedPath);
+}
 
-function findMinerCommandDirIn(cacheRoot, cacheKey, command) {
+function findMinerCommandDir(cacheKey, command, resolvedPath) {
+  return findMinerCommandDirIn(liveMinerRoot(), cacheKey, command, resolvedPath);
+}
+
+function findMinerCommandDirIn(cacheRoot, cacheKey, command, resolvedPath) {
   const root = path.join(cacheRoot, cacheKey);
   const match = command.match(/(?:^|\s)\.\/([^\s]+)/);
+  if (resolvedPath !== undefined) return resolvedPath && fs.existsSync(resolvedPath) ? path.dirname(resolvedPath) : "";
   if (!match) return fs.existsSync(root) ? root : "";
   const direct = path.join(root, match[1]);
   if (fs.existsSync(direct)) return root;
