@@ -1,6 +1,6 @@
 {
   "name": "multi-miner",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "private": true,
   "description": "Multi-Miner: algo switching support for stratum miners",
   "license": "GPL-3.0-or-later",

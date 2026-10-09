@@ -16,7 +16,7 @@ const { startMiner, treeKill } = require("./src/process-manager");
 const { stringifyLine } = require("./src/json-lines");
 const { startWatchdogs: startWatchdogTimers } = require("./src/watchdogs");
 
-const VERSION = "v5.2.0";
+const VERSION = "v5.2.1";
 const AGENT = `Multi-Miner ${  VERSION}`;
 
 // Auto-restart backoff for an unexpectedly-closed miner so a persistently-failing miner doesn't
