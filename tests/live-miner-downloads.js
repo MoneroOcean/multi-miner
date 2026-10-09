@@ -19,6 +19,7 @@ const {
 const { resolveMinerPaths, resolveMinerPathsForRun } = require("./live-intel-gpu-miners");
 const { findXmrig } = require("./live-cpu-miners");
 const { minerCommandContext, scriptCommand } = require("./live-nvidia-gpu-miners");
+const { quoteForCommand } = require("./common/live-helpers");
 // These fixtures require POSIX archive tools, shell wrappers, and link semantics.
 const posixArchive = { skip: process.platform === 'win32' && 'Requires POSIX archive tools and links' };
 
@@ -37,7 +38,26 @@ function createArchiveFixture({ archiveName, prepare, archiveBuilder, zip = fals
     childProcess.execFileSync("zip", ["-q", "-r", "-y", archive, "."], { cwd: source, stdio: "ignore" });
     if (dosZip) patchZipDosMetadata(archive);
   } else {
-    childProcess.execFileSync("tar", ["-cf", archive, "-C", source, "."], { stdio: "ignore" });
+    const patches = patchTarTargets || (patchTarTarget ? [patchTarTarget] : []);
+    let members = ["."];
+    if (patches.length) {
+      const patched = new Set(patches.map(({ member }) => member));
+      const files = [];
+      const collect = (directory, prefix = "") => {
+        for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+          const member = prefix + entry.name;
+          if (entry.isDirectory()) collect(path.join(directory, entry.name), `${member}/`);
+          else files.push(member);
+        }
+      };
+      collect(source);
+      // Emit the data-bearing inode before every header we turn into a link.
+      const targets = new Set(patches.map(({ target }) => target));
+      const regular = files.filter((member) => !patched.has(member)).sort();
+      members = [...regular.filter((member) => targets.has(member)),
+        ...regular.filter((member) => !targets.has(member)), ...patched];
+    }
+    childProcess.execFileSync("tar", ["-cf", archive, "-C", source, ...members], { stdio: "ignore" });
     if (patchTarTarget) patchTarHardlinkTarget(archive, patchTarTarget.member, patchTarTarget.target);
     if (patchTarTargets) patchTarHardlinkTargets(archive, patchTarTargets);
   }
@@ -82,11 +102,14 @@ function patchTarHardlinkTarget(archive, member, target) {
 function patchTarHardlinkTargets(archive, patches) {
   const bytes = fs.readFileSync(archive);
   const remaining = [...patches];
-  for (let offset = 0; offset + 512 <= bytes.length && remaining.length; offset += 512) {
+  for (let offset = 0; offset + 512 <= bytes.length && remaining.length;) {
     const name = bytes.toString("utf8", offset, offset + 100).replace(/\0.*$/, "");
-    const patch = remaining.find((candidate) => name.endsWith(candidate.member));
-    if (!patch) continue;
-    bytes[offset + 156] = "1".charCodeAt(0);
+    const size = parseInt(bytes.toString("ascii", offset + 124, offset + 136).replace(/\0.*$/, "").trim(), 8) || 0;
+    const patch = remaining.find((candidate) => name.replace(/^\.\//, "") === candidate.member);
+    const nextOffset = offset + 512 + Math.ceil(size / 512) * 512;
+    if (!patch) { offset = nextOffset; continue; }
+    assert.equal(bytes[offset + 156], "1".charCodeAt(0), "patched fixture member must already be a hardlink");
+    assert.equal(size, 0, "patched fixture hardlink must not carry file data");
     bytes.fill(0, offset + 157, offset + 257);
     bytes.write(patch.target, offset + 157, "utf8");
     bytes.fill(0x20, offset + 148, offset + 156);
@@ -94,6 +117,7 @@ function patchTarHardlinkTargets(archive, patches) {
     for (let index = offset; index < offset + 512; index += 1) checksum += bytes[index];
     bytes.write(`${checksum.toString(8).padStart(6, "0")}\0 `, offset + 148, "ascii");
     remaining.splice(remaining.indexOf(patch), 1);
+    offset = nextOffset;
   }
   if (remaining.length) throw new Error("hardlink fixture member missing");
   fs.writeFileSync(archive, bytes);
@@ -171,6 +195,27 @@ describe("live miner release downloads", () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "mm-concurrent-extraction-"));
     const bytes = Buffer.from("verified parallel archive");
     const destinations = [];
+    const link = fs.promises.link;
+    let completedPublications = 0, existingPublications = 0;
+    t.mock.method(fs.promises, "link", async (source, destination) => {
+      try {
+        await link(source, destination);
+        if (destination.endsWith(`${path.sep}asset.zip`)) completedPublications += 1;
+      } catch (error) {
+        if (destination.endsWith(`${path.sep}asset.zip`) && error.code === "EEXIST") existingPublications += 1;
+        throw error;
+      }
+    });
+    const rename = fs.promises.rename;
+    let archivePublications = 0;
+    t.mock.method(fs.promises, "rename", async (source, destination) => {
+      if (destination.endsWith(`${path.sep}asset.zip`) && ++archivePublications > 1) {
+        const error = new Error("Archive replacement is not permitted");
+        error.code = "EPERM";
+        throw error;
+      }
+      return rename(source, destination);
+    });
     const createWriteStream = fs.createWriteStream;
     t.mock.method(fs, "createWriteStream",(file, options) => {
       destinations.push(file);
@@ -195,6 +240,10 @@ describe("live miner release downloads", () => {
       assert.equal(destinations.length,2);
       assert.equal(new Set(destinations).size,2, "parallel downloads must not share a .part file");
       assert.equal(destinations.every(file =>!fs.existsSync(file)), true, "completed download staging files are removed");
+      assert.equal(completedPublications, 1, "exactly one complete download wins cache publication");
+      assert.equal(existingPublications, 1, "the other caller observes a real atomic-publication collision");
+      assert.deepEqual(fs.readFileSync(path.join(root, "cache", "fixture", "vfixture", "asset.zip")), bytes,
+        "concurrent cache publication must retain the complete verified archive");
       assert.notEqual(first, second);
       fs.rmSync(firstRoot, {recursive: true, force: true});
       assert.equal(fs.existsSync(first), false);
@@ -436,8 +485,9 @@ describe("live miner release downloads", () => {
       assert.equal(intel.srbminer, currentSrb);
 
       const command = scriptCommand("srbminer-multi", "./SRBMiner-MULTI --version", resolved);
-      assert.ok(command.includes(path.dirname(currentSrb)));
-      assert.ok(!command.includes(path.dirname(oldSrb)), "NVIDIA command setup must not select an older release");
+      const quotedDirectory = (binary) => quoteForCommand(path.dirname(binary)).slice(1, -1);
+      assert.ok(command.includes(quotedDirectory(currentSrb)));
+      assert.ok(!command.includes(quotedDirectory(oldSrb)), "NVIDIA command setup must not select an older release");
 
       const context = minerCommandContext({ cudaBinary: "xmrig-cuda/libxmrig-cuda.so" }, cacheRoot, resolved);
       assert.equal(context.xmrigCudaLoader, currentLoader);

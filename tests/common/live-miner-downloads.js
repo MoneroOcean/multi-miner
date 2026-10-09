@@ -179,7 +179,14 @@ async function downloadToFile(url, destination) {
   const output = fs.createWriteStream(tmpPath, { mode: 0o644 });
   try {
     await pipeline(Readable.fromWeb(response.body), output);
-    await fsp.rename(tmpPath, destination);
+    // Publish the complete archive once, without replacing another caller's
+    // open cache file. Unique extraction trees remain owned by each invocation.
+    try {
+      await fsp.link(tmpPath, destination);
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+    }
+    await fsp.rm(tmpPath, { force: true });
   } catch (error) {
     await fsp.rm(tmpPath, { force: true });
     throw error;

@@ -23,7 +23,21 @@ function timeout(promise, ms = 5000) {
   ]).finally(() => clearTimeout(timer));
 }
 
+function startupLogger() {
+  return { ...silentLogger(), miner() {} };
+}
+
 describe('Startup and CLI shutdown', { concurrency: false }, () => {
+  it('accepts miner output through the startup logger fixture', async (t) => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mm-startup-logger-'));
+    const app = new MultiMinerApp([], { cwd: dir });
+    app.logger = startupLogger();
+    t.after(async () => {
+      await app.stop();
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+    assert.doesNotThrow(() => app.printAllMessages('fixture startup output\n'));
+  });
   it('does not advance a cancelled sequential queue', () => {
     let stopping = false;
     let started = 0;
@@ -40,7 +54,7 @@ describe('Startup and CLI shutdown', { concurrency: false }, () => {
     it(`owns and closes the ${phase} child before stop resolves`, async (t) => {
       const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mm-startup-'));
       const app = new MultiMinerApp([], { cwd: dir, checkTimeoutMs: 120, benchmarkTimeoutMs: 120 });
-      app.logger = silentLogger();
+      app.logger = startupLogger();
       const children = [];
       const start = app.startMinerProcess.bind(app);
       app.startMinerProcess = (...args) => {
@@ -85,7 +99,7 @@ describe('Startup and CLI shutdown', { concurrency: false }, () => {
     it(`clears the ${phase} timeout when its child exits early`, async (t) => {
       const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mm-startup-exit-'));
       const app = new MultiMinerApp([], { cwd: dir, checkTimeoutMs: 700, benchmarkTimeoutMs: 700 });
-      app.logger = silentLogger();
+      app.logger = startupLogger();
       app.config.algos = { 'cn/gpu': 'unused' };
       app.startMinerProcess = () => {
         const proc = new EventEmitter();
@@ -116,7 +130,7 @@ describe('Startup and CLI shutdown', { concurrency: false }, () => {
         MultiMinerApp.prototype.run = async function () {
           process.once('disconnect', () => this.stop().then(() => process.exit(0)));
           process.channel.unref();
-          this.logger = { log() {}, err() {} };
+          this.logger = { log() {}, err() {}, miner() {} };
           this.minerProc = this.startMinerProcess(formatCommand(process.execPath, ['-e', 'setInterval(() => {}, 1000)']), () => {});
           this.minerProc.once('spawn', () => process.stdout.write('CHILD:' + this.minerProc.pid + '\\nREADY\\n'));
         };
@@ -154,7 +168,7 @@ describe('Startup and CLI shutdown', { concurrency: false }, () => {
   it('waits for child output closure even when the parent already exited', async (t) => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mm-exited-child-'));
     const app = new MultiMinerApp([], { cwd: dir });
-    app.logger = silentLogger();
+    app.logger = startupLogger();
     const source = `require('child_process').spawn(process.execPath, ['-e', 'setTimeout(() => {}, 350)'], { stdio: 'inherit' }); process.exit(0);`;
     const proc = app.startMinerProcess(formatCommand(process.execPath, ['-e', source]), () => {});
     let closed = false;
@@ -173,7 +187,7 @@ describe('Startup and CLI shutdown', { concurrency: false }, () => {
     it(`${phase} waits for descendant-owned pipes before advancing the startup queue`, async (t) => {
       const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mm-startup-drain-'));
       const app = new MultiMinerApp([], { cwd: dir, checkTimeoutMs: 10, benchmarkTimeoutMs: 10 });
-      app.logger = silentLogger();
+      app.logger = startupLogger();
       app.config.algos = { 'cn/gpu': 'fixture-first', etchash: 'fixture-next' };
       let started = 0;
       let first;
